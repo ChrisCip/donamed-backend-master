@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model almacen {
+  idalmacen            Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(100)
+  codigociudad         String?                @db.VarChar(10)
+  direccion            String?
+  estado               tipo_estado_general?   @default(ACTIVO)
+  telefono             String                 @db.VarChar
+  correo               String                 @db.VarChar
+  creado_en            DateTime?              @db.Timestamp(6)
+  actualizado_en       DateTime?              @db.Timestamp(6)
+  ciudad               ciudad?                @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+  almacen_medicamento  almacen_medicamento[]
+  detalle_solicitud    detalle_solicitud[]
+  donacion_medicamento donacion_medicamento[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model almacen_medicamento {
+  idalmacen         Int
+  codigolote        String      @db.VarChar(20)
+  codigomedicamento String      @db.VarChar(20)
+  cantidad          Int
+  lote              lote        @relation(fields: [codigolote], references: [codigolote], onDelete: NoAction, onUpdate: NoAction)
+  medicamento       medicamento @relation(fields: [codigomedicamento], references: [codigomedicamento], onDelete: NoAction, onUpdate: NoAction)
+  almacen           almacen     @relation(fields: [idalmacen], references: [idalmacen], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([idalmacen, codigomedicamento, codigolote])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categoria {
+  idcategoria           Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(50)
+  creado_en             DateTime?               @default(now()) @db.Timestamp(6)
+  actualizado_en        DateTime?               @db.Timestamp(6)
+  categoria_medicamento categoria_medicamento[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categoria_medicamento {
+  idcategoria       Int
+  codigomedicamento String      @db.VarChar(20)
+  medicamento       medicamento @relation(fields: [codigomedicamento], references: [codigomedicamento], onDelete: NoAction, onUpdate: NoAction)
+  categoria         categoria   @relation(fields: [idcategoria], references: [idcategoria], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([idcategoria, codigomedicamento])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model centro_medico {
+  idcentro  Int                  @id @default(autoincrement())
+  nombre    String               @db.VarChar(150)
+  direccion String?              @db.VarChar(255)
+  estado    tipo_estado_general? @default(ACTIVO)
+  solicitud solicitud[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ciudad {
+  codigociudad    String      @id @db.VarChar(10)
+  nombre          String      @db.VarChar(50)
+  codigoprovincia String      @db.VarChar(10)
+  almacen         almacen[]
+  provincia       provincia   @relation(fields: [codigoprovincia], references: [codigoprovincia], onDelete: NoAction, onUpdate: NoAction)
+  persona         persona[]
+  proveedor       proveedor[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model despacho {
+  numerodespacho                          Int        @id @default(autoincrement())
+  solicitud                               Int?       @unique
+  fecha_despacho                          DateTime?  @default(now()) @db.Timestamp(6)
+  cedula_recibe                           String?    @db.VarChar(11)
+  persona                                 persona?   @relation(fields: [cedula_recibe], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  solicitud_despacho_solicitudTosolicitud solicitud? @relation("despacho_solicitudTosolicitud", fields: [solicitud], references: [numerosolicitud], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model detalle_solicitud {
+  numerosolicitud    Int
+  idalmacen          Int
+  codigolote         String    @db.VarChar(20)
+  cantidad           Int
+  dosis_indicada     String?   @db.VarChar(100)
+  tiempo_tratamiento String?   @db.VarChar(100)
+  lote               lote      @relation(fields: [codigolote], references: [codigolote], onDelete: NoAction, onUpdate: NoAction)
+  almacen            almacen   @relation(fields: [idalmacen], references: [idalmacen], onDelete: NoAction, onUpdate: NoAction)
+  solicitud          solicitud @relation(fields: [numerosolicitud], references: [numerosolicitud], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([numerosolicitud, idalmacen, codigolote])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model donacion_medicamento {
+  numerodonacion Int
+  idalmacen      Int
+  codigolote     String     @db.VarChar(20)
+  cantidad       Int
+  lote           lote       @relation(fields: [codigolote], references: [codigolote], onDelete: NoAction, onUpdate: NoAction)
+  almacen        almacen    @relation(fields: [idalmacen], references: [idalmacen], onDelete: NoAction, onUpdate: NoAction)
+  donaciones     donaciones @relation(fields: [numerodonacion], references: [numerodonacion], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([numerodonacion, idalmacen, codigolote])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model donaciones {
+  numerodonacion                            Int                    @id @default(autoincrement())
+  proveedor                                 String?                @db.VarChar(20)
+  fecha_recibida                            DateTime?              @default(now()) @db.Timestamp(6)
+  descripcion                               String?
+  donacion_medicamento                      donacion_medicamento[]
+  proveedor_donaciones_proveedorToproveedor proveedor?             @relation("donaciones_proveedorToproveedor", fields: [proveedor], references: [rncproveedor], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model enfermedad {
+  idenfermedad           Int                      @id @default(autoincrement())
+  nombre                 String                   @db.VarChar(150)
+  creado_en              DateTime?                @default(now()) @db.Timestamp(6)
+  actualizado_en         DateTime?                @db.Timestamp(6)
+  enfermedad_medicamento enfermedad_medicamento[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model enfermedad_medicamento {
+  idenfermedad      Int
+  codigomedicamento String      @db.VarChar(20)
+  medicamento       medicamento @relation(fields: [codigomedicamento], references: [codigomedicamento], onDelete: NoAction, onUpdate: NoAction)
+  enfermedad        enfermedad  @relation(fields: [idenfermedad], references: [idenfermedad], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([idenfermedad, codigomedicamento])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model forma_farmaceutica {
+  idformafarmaceutica Int           @id @default(autoincrement())
+  nombre              String        @db.VarChar(50)
+  medicamento         medicamento[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model lote {
+  codigolote           String                 @id @default(dbgenerated("nextval('lote_codigolote_seq'::regclass)")) @db.VarChar(20)
+  codigomedicamento    String                 @db.VarChar(20)
+  fechavencimiento     DateTime               @db.Date
+  fechafabricacion     DateTime?              @db.Date
+  almacen_medicamento  almacen_medicamento[]
+  detalle_solicitud    detalle_solicitud[]
+  donacion_medicamento donacion_medicamento[]
+  medicamento          medicamento            @relation(fields: [codigomedicamento], references: [codigomedicamento], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([codigomedicamento], map: "idx_lote_medicamento")
+  @@index([fechavencimiento], map: "idx_lote_vencimiento")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model medicamento {
+  codigomedicamento          String                   @id @db.VarChar(20)
+  nombre                     String                   @db.VarChar(150)
+  descripcion                String?
+  compuesto_principal        String?                  @db.VarChar(150)
+  idforma_farmaceutica       Int?
+  cantidad_disponible_global Int?                     @default(0)
+  estado                     tipo_estado_general?     @default(ACTIVO)
+  creado_en                  DateTime?                @default(now()) @db.Timestamp(6)
+  actualizado_en             DateTime?                @db.Timestamp(6)
+  idvia_administracion       Int?
+  almacen_medicamento        almacen_medicamento[]
+  categoria_medicamento      categoria_medicamento[]
+  enfermedad_medicamento     enfermedad_medicamento[]
+  lote                       lote[]
+  via_administracion         via_administracion?      @relation(fields: [idvia_administracion], references: [idvia], onDelete: NoAction, onUpdate: NoAction, map: "fk_medicamento_via")
+  forma_farmaceutica         forma_farmaceutica?      @relation(fields: [idforma_farmaceutica], references: [idformafarmaceutica], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model persona {
+  cedula               String      @id @db.VarChar(11)
+  nombre               String      @db.VarChar(100)
+  apellidos            String      @db.VarChar(100)
+  sexo                 tipo_sexo?
+  fecha_nacimiento     DateTime?   @db.Date
+  telefono             String?     @db.VarChar(20)
+  telefono_alternativo String?     @db.VarChar(20)
+  codigociudad         String?     @db.VarChar(10)
+  direccion            String?
+  creado_en            DateTime?   @default(now()) @db.Timestamp(6)
+  actualizado_en       DateTime?   @default(now()) @db.Timestamp(6)
+  despacho             despacho[]
+  ciudad               ciudad?     @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+  solicitud            solicitud[]
+  usuario              usuario[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proveedor {
+  rncproveedor                               String       @id @db.VarChar(20)
+  nombre                                     String       @db.VarChar(150)
+  telefono                                   String?      @db.VarChar(20)
+  correo                                     String?      @db.VarChar(100)
+  codigociudad                               String?      @db.VarChar(10)
+  direccion                                  String?
+  creado_en                                  DateTime?    @default(now()) @db.Timestamp(6)
+  actualizado_en                             DateTime?    @db.Timestamp(6)
+  donaciones_donaciones_proveedorToproveedor donaciones[] @relation("donaciones_proveedorToproveedor")
+  ciudad                                     ciudad?      @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model provincia {
+  codigoprovincia String   @id @db.VarChar(10)
+  nombre          String   @db.VarChar(50)
+  ciudad          ciudad[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rol {
+  codigorol Int       @id @default(autoincrement())
+  nombre    String    @db.VarChar(50)
+  creado_en DateTime? @default(now()) @db.Timestamp(6)
+  usuario   usuario[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model solicitud {
+  numerosolicitud                        Int                    @id @default(autoincrement())
+  idusuario                              Int?
+  cedularepresentante                    String?                @db.VarChar(11)
+  codigotiposolicitud                    String?                @db.VarChar(20)
+  numeroafiliado                         String?                @db.VarChar(50)
+  idcentro                               Int?
+  relacion_solicitante                   String?                @db.VarChar(50)
+  patologia                              String?                @db.VarChar(150)
+  documentos                             Json?
+  estado                                 tipo_estado_solicitud? @default(PENDIENTE)
+  creada_en                              DateTime?              @default(now()) @db.Timestamp(6)
+  actualizado_en                         DateTime?              @db.Timestamp(6)
+  despacho_despacho_solicitudTosolicitud despacho?              @relation("despacho_solicitudTosolicitud")
+  detalle_solicitud                      detalle_solicitud[]
+  persona                                persona?               @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  tipo_solicitud                         tipo_solicitud?        @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
+  centro_medico                          centro_medico?         @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
+  usuario                                usuario?               @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tipo_solicitud {
+  codigotiposolicitud String      @id @db.VarChar(20)
+  descripcion         String      @db.VarChar(100)
+  solicitud           solicitud[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model usuario {
+  idusuario      Int                  @id @default(autoincrement())
+  correo         String               @unique @db.VarChar(100)
+  contrase_a     String               @map("contraseña") @db.VarChar(255)
+  cedula_usuario String?              @db.VarChar(11)
+  codigo_rol     Int?
+  ultimo_ingreso DateTime?            @db.Timestamp(6)
+  creado_en      DateTime?            @default(now()) @db.Timestamp(6)
+  actualizado_en DateTime?            @db.Timestamp(6)
+  estado         tipo_estado_general? @default(ACTIVO)
+  solicitud      solicitud[]
+  persona        persona?             @relation(fields: [cedula_usuario], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  rol            rol?                 @relation(fields: [codigo_rol], references: [codigorol], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model via_administracion {
+  idvia       Int           @id @default(autoincrement())
+  nombre      String        @db.VarChar(50)
+  medicamento medicamento[]
+}
+
+enum tipo_estado_general {
+  ACTIVO
+  INACTIVO
+}
+
+enum tipo_estado_solicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+  DESPACHADA
+}
+
+enum tipo_sexo {
+  M
+  F
+}
