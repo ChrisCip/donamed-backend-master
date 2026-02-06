@@ -146,7 +146,7 @@ router.patch('/solicitudes/:id/estado', solicitudController.updateSolicitudEstad
  *         description: Despacho creado
  */
 router.post('/solicitudes/:id/dispatch', (req: Request, res: Response, next: NextFunction) => {
-  req.body.solicitud = parseInt(req.params.id);
+  req.body.solicitud = parseInt(req.params.id!, 10);
   req.body.cedula_recibe = req.body.cedula_recibido_por;
   solicitudController.createDespacho(req, res, next);
 });
@@ -156,7 +156,7 @@ router.get('/requests', solicitudController.getSolicitudes);
 router.get('/requests/:id', solicitudController.getSolicitudById);
 router.patch('/requests/:id/evaluate', solicitudController.evaluateSolicitud);
 router.post('/requests/:id/dispatch', (req: Request, res: Response, next: NextFunction) => {
-  req.body.solicitud = parseInt(req.params.id);
+  req.body.solicitud = parseInt(req.params.id!, 10);
   req.body.cedula_recibe = req.body.cedula_recibido_por;
   solicitudController.createDespacho(req, res, next);
 });

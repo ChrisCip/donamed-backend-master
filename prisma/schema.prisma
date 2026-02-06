@@ -236,24 +236,26 @@ model rol {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model solicitud {
-  numerosolicitud                        Int                    @id @default(autoincrement())
+  numerosolicitud                        Int                      @id @default(autoincrement())
   idusuario                              Int?
-  cedularepresentante                    String?                @db.VarChar(11)
-  codigotiposolicitud                    String?                @db.VarChar(20)
-  numeroafiliado                         String?                @db.VarChar(50)
+  cedularepresentante                    String?                  @db.VarChar(11)
+  codigotiposolicitud                    String?                  @db.VarChar(20)
+  numeroafiliado                         String?                  @db.VarChar(50)
   idcentro                               Int?
-  relacion_solicitante                   String?                @db.VarChar(50)
-  patologia                              String?                @db.VarChar(150)
+  relacion_solicitante                   String?                  @db.VarChar(50)
+  patologia                              String?                  @db.VarChar(150)
   documentos                             Json?
-  estado                                 tipo_estado_solicitud? @default(PENDIENTE)
-  creada_en                              DateTime?              @default(now()) @db.Timestamp(6)
-  actualizado_en                         DateTime?              @db.Timestamp(6)
-  despacho_despacho_solicitudTosolicitud despacho?              @relation("despacho_solicitudTosolicitud")
+  estado                                 tipo_estado_solicitud?   @default(PENDIENTE)
+  creada_en                              DateTime?                @default(now()) @db.Timestamp(6)
+  actualizado_en                         DateTime?                @db.Timestamp(6)
+  observaciones                          String?
+  despacho_despacho_solicitudTosolicitud despacho?                @relation("despacho_solicitudTosolicitud")
   detalle_solicitud                      detalle_solicitud[]
-  persona                                persona?               @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
-  tipo_solicitud                         tipo_solicitud?        @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
-  centro_medico                          centro_medico?         @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
-  usuario                                usuario?               @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
+  medicamento_solicitado                 medicamento_solicitado[]
+  persona                                persona?                 @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  tipo_solicitud                         tipo_solicitud?          @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
+  centro_medico                          centro_medico?           @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
+  usuario                                usuario?                 @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -274,6 +276,7 @@ model usuario {
   creado_en      DateTime?            @default(now()) @db.Timestamp(6)
   actualizado_en DateTime?            @db.Timestamp(6)
   estado         tipo_estado_general? @default(ACTIVO)
+  foto_url       String?              @db.VarChar(500)
   solicitud      solicitud[]
   persona        persona?             @relation(fields: [cedula_usuario], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
   rol            rol?                 @relation(fields: [codigo_rol], references: [codigorol], onDelete: NoAction, onUpdate: NoAction)
@@ -286,9 +289,20 @@ model via_administracion {
   medicamento medicamento[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model medicamento_solicitado {
+  id              Int       @id @default(autoincrement())
+  numerosolicitud Int
+  nombre          String    @db.VarChar(150)
+  dosis           String?   @db.VarChar(100)
+  creado_en       DateTime? @default(now()) @db.Timestamp(6)
+  solicitud       solicitud @relation(fields: [numerosolicitud], references: [numerosolicitud], onDelete: Cascade, onUpdate: NoAction)
+}
+
 enum tipo_estado_general {
   ACTIVO
   INACTIVO
+  ELIMINADO
 }
 
 enum tipo_estado_solicitud {
@@ -296,6 +310,9 @@ enum tipo_estado_solicitud {
   APROBADA
   RECHAZADA
   DESPACHADA
+  EN_REVISION
+  CANCELADA
+  INCOMPLETA
 }
 
 enum tipo_sexo {

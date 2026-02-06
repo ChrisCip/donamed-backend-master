@@ -67,7 +67,8 @@ export interface UserProfile {
   correo: string;
   cedula_usuario: string | null;
   codigo_rol: number | null;
-  estado: 'ACTIVO' | 'INACTIVO' | null;
+  estado: 'ACTIVO' | 'INACTIVO' | 'ELIMINADO' | null;
+  creado_en: Date | null;
   persona: PersonaConCiudad | null;
   rol: RolBasico | null;
 }
@@ -116,7 +117,7 @@ export interface DetalleSolicitud {
 
 export interface SolicitudConDetalles {
   numerosolicitud: number;
-  estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | null;
+  estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA' | null;
   creada_en: Date | null;
   patologia: string | null;
   codigotiposolicitud: string | null;

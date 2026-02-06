@@ -83,17 +83,77 @@ class SolicitudService {
 
   async updateSolicitudEstado(
     numerosolicitud: number,
-    data: { estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' }
+    data: { estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA' }
   ) {
+    // Si se está aprobando la solicitud, verificar stock disponible
+    if (data.estado === 'APROBADA') {
+      await this.verificarStockDisponible(numerosolicitud);
+    }
+
     return await prisma.solicitud.update({
       where: { numerosolicitud },
       data: { estado: data.estado, actualizado_en: new Date() },
       include: {
         usuario: { include: { persona: true } },
         tipo_solicitud: true,
-        detalle_solicitud: true,
+        detalle_solicitud: {
+          include: {
+            lote: { include: { medicamento: true } },
+            almacen: true,
+          },
+        },
       },
     });
+  }
+
+  /**
+   * Verifica que hay stock suficiente para todos los medicamentos de una solicitud
+   */
+  private async verificarStockDisponible(numerosolicitud: number): Promise<void> {
+    // Obtener los detalles de la solicitud
+    const detalles = await prisma.detalle_solicitud.findMany({
+      where: { numerosolicitud },
+      include: {
+        lote: { include: { medicamento: true } },
+        almacen: true,
+      },
+    });
+
+    if (detalles.length === 0) {
+      const error: AppError = new Error('La solicitud no tiene medicamentos asociados');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const medicamentosSinStock: string[] = [];
+
+    // Verificar stock para cada detalle
+    for (const detalle of detalles) {
+      const stockAlmacen = await prisma.almacen_medicamento.findFirst({
+        where: {
+          idalmacen: detalle.idalmacen,
+          codigolote: detalle.codigolote,
+        },
+      });
+
+      const stockDisponible = stockAlmacen?.cantidad || 0;
+      
+      if (stockDisponible < detalle.cantidad) {
+        const nombreMedicamento = detalle.lote?.medicamento?.nombre || detalle.codigolote;
+        const nombreAlmacen = detalle.almacen?.nombre || `Almacén ${detalle.idalmacen}`;
+        medicamentosSinStock.push(
+          `${nombreMedicamento} (solicitado: ${detalle.cantidad}, disponible: ${stockDisponible} en ${nombreAlmacen})`
+        );
+      }
+    }
+
+    if (medicamentosSinStock.length > 0) {
+      const error: AppError = new Error(
+        `No hay stock suficiente para aprobar esta solicitud:\n- ${medicamentosSinStock.join('\n- ')}`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
   }
 
   // ==========================================================

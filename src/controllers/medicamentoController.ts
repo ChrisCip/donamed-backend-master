@@ -26,7 +26,7 @@ class MedicamentoController {
 
   async getMedicamentoById(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
-      const codigomedicamento = req.params.codigo || req.params.id;
+      const codigomedicamento = req.params.codigo || req.params.id!;
       const medicamento = await medicamentoService.getMedicamentoById(codigomedicamento);
       res.status(200).json({ success: true, data: medicamento });
     } catch (error) {
@@ -53,7 +53,7 @@ class MedicamentoController {
 
   async updateMedicamento(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
-      const codigomedicamento = req.params.codigo || req.params.id;
+      const codigomedicamento = req.params.codigo || req.params.id!;
       const medicamento = await medicamentoService.updateMedicamento(codigomedicamento, req.body);
       res.status(200).json({ success: true, data: medicamento, message: 'Medicamento actualizado exitosamente' });
     } catch (error) {
@@ -63,7 +63,7 @@ class MedicamentoController {
 
   async deleteMedicamento(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
-      const codigomedicamento = req.params.codigo || req.params.id;
+      const codigomedicamento = req.params.codigo || req.params.id!;
       await medicamentoService.deleteMedicamento(codigomedicamento);
       res.status(200).json({ success: true, message: 'Medicamento eliminado exitosamente' });
     } catch (error) {
