@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import medicamentoController from '../controllers/medicamentoController.js';
 
 const router = Router();
@@ -127,22 +127,6 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
 router.get('/medicamentos/:codigo', medicamentoController.getMedicamentoById);
 router.put('/medicamentos/:codigo', medicamentoController.updateMedicamento);
 router.delete('/medicamentos/:codigo', medicamentoController.deleteMedicamento);
-
-// Aliases en inglés
-router.get('/medicines', medicamentoController.getMedicamentos);
-router.post('/medicines', medicamentoController.createMedicamento);
-router.get('/medicines/:code', (req: Request, res: Response, next: NextFunction) => {
-  (req.params as any).codigo = req.params.code;
-  medicamentoController.getMedicamentoById(req, res, next);
-});
-router.put('/medicines/:code', (req: Request, res: Response, next: NextFunction) => {
-  (req.params as any).codigo = req.params.code;
-  medicamentoController.updateMedicamento(req, res, next);
-});
-router.delete('/medicines/:code', (req: Request, res: Response, next: NextFunction) => {
-  (req.params as any).codigo = req.params.code;
-  medicamentoController.deleteMedicamento(req, res, next);
-});
 
 // ==========================================================
 // LOTES

@@ -1,8 +1,9 @@
 import prisma from '../config/prisma.js';
 import type { AppError } from '../types/index.js';
+import { validarCedula } from '../utils/validators.js';
 
 /**
- * Servicio para gestión de Solicitudes y Despachos
+ * Servicio para gestión de Solicitudes
  */
 class SolicitudService {
   // ==========================================================
@@ -12,7 +13,7 @@ class SolicitudService {
   async getSolicitudes(query: {
     page?: number;
     limit?: number;
-    estado?: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA';
+    estado?: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA';
   }) {
     const page = query.page || 1;
     const limit = query.limit || 20;
@@ -28,6 +29,7 @@ class SolicitudService {
           persona: true,
           tipo_solicitud: true,
           centro_medico: true,
+          medicamento_solicitado: true, // Medicamentos solicitados por paciente (texto libre)
           detalle_solicitud: {
             include: {
               lote: { include: { medicamento: true } },
@@ -62,6 +64,7 @@ class SolicitudService {
         persona: true,
         tipo_solicitud: true,
         centro_medico: true,
+        medicamento_solicitado: true, // Medicamentos solicitados por paciente (texto libre)
         detalle_solicitud: {
           include: {
             lote: { include: { medicamento: true } },
@@ -81,9 +84,66 @@ class SolicitudService {
     return solicitud;
   }
 
+  /**
+   * Crear una nueva solicitud
+   */
+  async createSolicitud(data: {
+    idusuario?: number;
+    cedularepresentante?: string;
+    codigotiposolicitud?: string;
+    numeroafiliado?: string;
+    idcentro?: number;
+    relacion_solicitante?: string;
+    patologia?: string;
+    documentos?: any;
+    observaciones?: string;
+    medicamentos_solicitados?: Array<{ nombre: string; dosis?: string }>;
+  }) {
+    // Validar cédula del representante si se proporciona
+    if (data.cedularepresentante) {
+      if (!validarCedula(data.cedularepresentante)) {
+        const error: AppError = new Error('La cédula del representante debe tener exactamente 11 dígitos numéricos');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    const { medicamentos_solicitados, ...solicitudData } = data;
+
+    return await prisma.solicitud.create({
+      data: {
+        ...solicitudData,
+        estado: 'PENDIENTE',
+        creada_en: new Date(),
+        medicamento_solicitado: medicamentos_solicitados
+          ? {
+              create: medicamentos_solicitados.map((med) => ({
+                nombre: med.nombre,
+                dosis: med.dosis,
+                creado_en: new Date(),
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        usuario: { include: { persona: true } },
+        persona: true,
+        tipo_solicitud: true,
+        centro_medico: true,
+        medicamento_solicitado: true,
+      },
+    });
+  }
+
+  /**
+   * Actualizar estado de solicitud con observaciones
+   */
   async updateSolicitudEstado(
     numerosolicitud: number,
-    data: { estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA' }
+    data: {
+      estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA';
+      observaciones?: string;
+    }
   ) {
     // Si se está aprobando la solicitud, verificar stock disponible
     if (data.estado === 'APROBADA') {
@@ -92,16 +152,113 @@ class SolicitudService {
 
     return await prisma.solicitud.update({
       where: { numerosolicitud },
-      data: { estado: data.estado, actualizado_en: new Date() },
+      data: {
+        estado: data.estado,
+        observaciones: data.observaciones,
+        actualizado_en: new Date(),
+      },
       include: {
         usuario: { include: { persona: true } },
         tipo_solicitud: true,
+        medicamento_solicitado: true,
         detalle_solicitud: {
           include: {
             lote: { include: { medicamento: true } },
             almacen: true,
           },
         },
+      },
+    });
+  }
+
+  /**
+   * Actualizar campos de una solicitud (no solo estado)
+   */
+  async updateSolicitud(
+    numerosolicitud: number,
+    data: {
+      cedularepresentante?: string;
+      codigotiposolicitud?: string;
+      numeroafiliado?: string;
+      idcentro?: number;
+      relacion_solicitante?: string;
+      patologia?: string;
+      documentos?: any;
+      observaciones?: string;
+    }
+  ) {
+    // Verificar que la solicitud existe
+    const existente = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+    });
+
+    if (!existente) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Validar cédula del representante si se proporciona
+    if (data.cedularepresentante) {
+      if (!validarCedula(data.cedularepresentante)) {
+        const error: AppError = new Error('La cédula del representante debe tener exactamente 11 dígitos numéricos');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    return await prisma.solicitud.update({
+      where: { numerosolicitud },
+      data: {
+        ...data,
+        actualizado_en: new Date(),
+      },
+      include: {
+        usuario: { include: { persona: true } },
+        persona: true,
+        tipo_solicitud: true,
+        centro_medico: true,
+        medicamento_solicitado: true,
+      },
+    });
+  }
+
+  /**
+   * Confirmar solicitud (cambiar de PENDIENTE a EN_REVISION)
+   */
+  async confirmarSolicitud(numerosolicitud: number) {
+    const solicitud = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+      include: { medicamento_solicitado: true },
+    });
+
+    if (!solicitud) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (solicitud.estado !== 'PENDIENTE') {
+      const error: AppError = new Error('Solo se pueden confirmar solicitudes en estado PENDIENTE');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (solicitud.medicamento_solicitado.length === 0) {
+      const error: AppError = new Error('La solicitud debe tener al menos un medicamento solicitado');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return await prisma.solicitud.update({
+      where: { numerosolicitud },
+      data: {
+        estado: 'EN_REVISION',
+        actualizado_en: new Date(),
+      },
+      include: {
+        usuario: { include: { persona: true } },
+        medicamento_solicitado: true,
       },
     });
   }
@@ -173,51 +330,26 @@ class SolicitudService {
   }
 
   // ==========================================================
-  // DESPACHOS
+  // DETALLE DE SOLICITUD (Medicamentos reales aprobados por admin)
   // ==========================================================
 
-  async getDespachos(query: { page?: number; limit?: number }) {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
-    const skip = (page - 1) * limit;
-
-    const [despachos, total] = await Promise.all([
-      prisma.despacho.findMany({
-        include: {
-          solicitud_despacho_solicitudTosolicitud: {
-            include: {
-              usuario: { include: { persona: true } },
-              detalle_solicitud: {
-                include: {
-                  lote: { include: { medicamento: true } },
-                },
-              },
-            },
-          },
-          persona: true,
-        },
-        skip,
-        take: limit,
-        orderBy: { fecha_despacho: 'desc' },
-      }),
-      prisma.despacho.count(),
-    ]);
-
-    return {
-      data: despachos,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async createDespacho(data: { solicitud: number; cedula_recibe?: string }) {
-    // Verificar que la solicitud existe y está aprobada
+  /**
+   * Agregar detalle a una solicitud (vincular lote real del inventario)
+   * Usado por admin al aprobar solicitudes
+   */
+  async addDetalleSolicitud(
+    numerosolicitud: number,
+    data: {
+      idalmacen: number;
+      codigolote: string;
+      cantidad: number;
+      dosis_indicada?: string;
+      tiempo_tratamiento?: string;
+    }
+  ) {
+    // Verificar que la solicitud existe
     const solicitud = await prisma.solicitud.findUnique({
-      where: { numerosolicitud: data.solicitud },
+      where: { numerosolicitud },
     });
 
     if (!solicitud) {
@@ -226,28 +358,99 @@ class SolicitudService {
       throw error;
     }
 
-    if (solicitud.estado !== 'APROBADA') {
-      const error: AppError = new Error('La solicitud debe estar aprobada para despachar');
+    // Verificar que la solicitud esté en estado que permita agregar detalles
+    if (solicitud.estado !== 'PENDIENTE' && solicitud.estado !== 'EN_REVISION') {
+      const error: AppError = new Error('No se pueden agregar detalles a una solicitud en este estado');
       error.statusCode = 400;
       throw error;
     }
 
-    // Crear despacho y actualizar estado de solicitud
-    const [despacho] = await prisma.$transaction([
-      prisma.despacho.create({
-        data,
-        include: {
-          solicitud_despacho_solicitudTosolicitud: true,
-          persona: true,
-        },
-      }),
-      prisma.solicitud.update({
-        where: { numerosolicitud: data.solicitud },
-        data: { estado: 'DESPACHADA', actualizado_en: new Date() },
-      }),
-    ]);
+    // Verificar que el lote existe
+    const lote = await prisma.lote.findUnique({
+      where: { codigolote: data.codigolote },
+      include: { medicamento: true },
+    });
 
-    return despacho;
+    if (!lote) {
+      const error: AppError = new Error('El lote especificado no existe');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Verificar que el almacén existe
+    const almacen = await prisma.almacen.findUnique({
+      where: { idalmacen: data.idalmacen },
+    });
+
+    if (!almacen) {
+      const error: AppError = new Error('El almacén especificado no existe');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Verificar stock disponible
+    const stock = await prisma.almacen_medicamento.findFirst({
+      where: {
+        idalmacen: data.idalmacen,
+        codigolote: data.codigolote,
+      },
+    });
+
+    if (!stock || stock.cantidad < data.cantidad) {
+      const error: AppError = new Error(
+        `Stock insuficiente. Disponible: ${stock?.cantidad || 0}, Solicitado: ${data.cantidad}`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return await prisma.detalle_solicitud.create({
+      data: {
+        numerosolicitud,
+        ...data,
+      },
+      include: {
+        lote: { include: { medicamento: true } },
+        almacen: true,
+      },
+    });
+  }
+
+  /**
+   * Eliminar detalle de una solicitud
+   */
+  async removeDetalleSolicitud(
+    numerosolicitud: number,
+    idalmacen: number,
+    codigolote: string
+  ) {
+    // Verificar que la solicitud existe
+    const solicitud = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+    });
+
+    if (!solicitud) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Verificar que la solicitud esté en estado que permita modificaciones
+    if (solicitud.estado !== 'PENDIENTE' && solicitud.estado !== 'EN_REVISION') {
+      const error: AppError = new Error('No se pueden modificar detalles de una solicitud en este estado');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return await prisma.detalle_solicitud.delete({
+      where: {
+        numerosolicitud_idalmacen_codigolote: {
+          numerosolicitud,
+          idalmacen,
+          codigolote,
+        },
+      },
+    });
   }
 }
 

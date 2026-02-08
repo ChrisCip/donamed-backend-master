@@ -13,6 +13,9 @@ import donacionRoutes from './donacionRoutes.js';
 import solicitudRoutes from './solicitudRoutes.js';
 import personaRoutes from './personaRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
+import despachoRoutes from './despachoRoutes.js';
+import proveedorRoutes from './proveedorRoutes.js';
+import medicamentoSolicitadoRoutes from './medicamentoSolicitadoRoutes.js';
 
 const router = Router();
 
@@ -141,14 +144,23 @@ router.use('/', catalogoRoutes);
 // Medicamentos, Lotes, Inventario
 router.use('/', medicamentoRoutes);
 
-// Almacenes, Proveedores, Centros Médicos
+// Almacenes, Centros Médicos
 router.use('/', almacenRoutes);
 
-// Donaciones
-router.use('/', donacionRoutes);
+// Proveedores (endpoint independiente)
+router.use('/proveedores', proveedorRoutes);
 
-// Solicitudes, Despachos
+// Donaciones
+router.use('/donaciones', donacionRoutes);
+
+// Solicitudes
 router.use('/', solicitudRoutes);
+
+// Despachos (endpoint independiente)
+router.use('/despachos', despachoRoutes);
+
+// Medicamentos Solicitados (texto libre del paciente)
+router.use('/medicamentos-solicitados', medicamentoSolicitadoRoutes);
 
 // Usuarios, Personas
 router.use('/', personaRoutes);

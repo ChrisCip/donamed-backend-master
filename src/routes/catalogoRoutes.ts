@@ -83,11 +83,6 @@ router.post('/categorias', catalogoController.createCategoria);
 router.put('/categorias/:id', catalogoController.updateCategoria);
 router.delete('/categorias/:id', catalogoController.deleteCategoria);
 
-// Aliases en inglés
-router.get('/categories', catalogoController.getCategorias);
-router.post('/categories', catalogoController.createCategoria);
-router.put('/categories/:id', catalogoController.updateCategoria);
-
 // ==========================================================
 // ENFERMEDADES
 // ==========================================================
@@ -127,11 +122,6 @@ router.get('/enfermedades', catalogoController.getEnfermedades);
 router.post('/enfermedades', catalogoController.createEnfermedad);
 router.put('/enfermedades/:id', catalogoController.updateEnfermedad);
 router.delete('/enfermedades/:id', catalogoController.deleteEnfermedad);
-
-// Aliases en inglés
-router.get('/diseases', catalogoController.getEnfermedades);
-router.post('/diseases', catalogoController.createEnfermedad);
-router.put('/diseases/:id', catalogoController.updateEnfermedad);
 
 // ==========================================================
 // VÍAS DE ADMINISTRACIÓN
@@ -173,11 +163,6 @@ router.post('/vias-administracion', catalogoController.createViaAdministracion);
 router.put('/vias-administracion/:id', catalogoController.updateViaAdministracion);
 router.delete('/vias-administracion/:id', catalogoController.deleteViaAdministracion);
 
-// Aliases en inglés
-router.get('/admin-routes', catalogoController.getViasAdministracion);
-router.post('/admin-routes', catalogoController.createViaAdministracion);
-router.put('/admin-routes/:id', catalogoController.updateViaAdministracion);
-
 // ==========================================================
 // FORMAS FARMACÉUTICAS
 // ==========================================================
@@ -217,11 +202,6 @@ router.get('/formas-farmaceuticas', catalogoController.getFormasFarmaceuticas);
 router.post('/formas-farmaceuticas', catalogoController.createFormaFarmaceutica);
 router.put('/formas-farmaceuticas/:id', catalogoController.updateFormaFarmaceutica);
 router.delete('/formas-farmaceuticas/:id', catalogoController.deleteFormaFarmaceutica);
-
-// Aliases en inglés
-router.get('/pharma-forms', catalogoController.getFormasFarmaceuticas);
-router.post('/pharma-forms', catalogoController.createFormaFarmaceutica);
-router.put('/pharma-forms/:id', catalogoController.updateFormaFarmaceutica);
 
 // ==========================================================
 // TIPOS DE SOLICITUD

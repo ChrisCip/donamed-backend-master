@@ -133,6 +133,7 @@ class UserService {
         creada_en: true,
         patologia: true,
         codigotiposolicitud: true,
+        observaciones: true,
         tipo_solicitud: {
           select: {
             descripcion: true,
@@ -141,6 +142,13 @@ class UserService {
         centro_medico: {
           select: {
             nombre: true,
+          },
+        },
+        medicamento_solicitado: {
+          select: {
+            id: true,
+            nombre: true,
+            dosis: true,
           },
         },
         detalle_solicitud: {
