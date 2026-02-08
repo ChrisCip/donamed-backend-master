@@ -2,7 +2,7 @@ import prisma from '../config/prisma.js';
 import type { AppError } from '../types/index.js';
 
 /**
- * Servicio para gestión de Medicamentos, Lotes e Inventario
+ * Servicio para gestión de Medicamentos e Inventario
  */
 class MedicamentoService {
   // ==========================================================
@@ -92,6 +92,7 @@ class MedicamentoService {
     return await prisma.medicamento.create({
       data: {
         ...medicamentoData,
+        actualizado_en: new Date(),
         categoria_medicamento: categorias?.length
           ? {
               create: categorias.map((idcategoria) => ({ idcategoria })),
@@ -121,11 +122,35 @@ class MedicamentoService {
       idvia_administracion?: number;
       idforma_farmaceutica?: number;
       estado?: 'ACTIVO' | 'INACTIVO';
+      categorias?: number[];
+      enfermedades?: number[];
     }
   ) {
+    const { categorias, enfermedades, ...updateData } = data;
+
+    // Si hay categorías, actualizar las relaciones
+    if (categorias !== undefined) {
+      await prisma.categoria_medicamento.deleteMany({ where: { codigomedicamento } });
+      if (categorias.length > 0) {
+        await prisma.categoria_medicamento.createMany({
+          data: categorias.map(idcategoria => ({ codigomedicamento, idcategoria })),
+        });
+      }
+    }
+
+    // Si hay enfermedades, actualizar las relaciones
+    if (enfermedades !== undefined) {
+      await prisma.enfermedad_medicamento.deleteMany({ where: { codigomedicamento } });
+      if (enfermedades.length > 0) {
+        await prisma.enfermedad_medicamento.createMany({
+          data: enfermedades.map(idenfermedad => ({ codigomedicamento, idenfermedad })),
+        });
+      }
+    }
+
     return await prisma.medicamento.update({
       where: { codigomedicamento },
-      data,
+      data: updateData,
       include: {
         via_administracion: true,
         forma_farmaceutica: true,
@@ -142,68 +167,6 @@ class MedicamentoService {
 
     return await prisma.medicamento.delete({
       where: { codigomedicamento },
-    });
-  }
-
-  // ==========================================================
-  // LOTES
-  // ==========================================================
-
-  async getLotes(query: { page?: number; limit?: number; codigomedicamento?: string; vencidos?: boolean }) {
-    const page = query.page || 1;
-    const limit = query.limit || 20;
-    const skip = (page - 1) * limit;
-
-    const where: Record<string, unknown> = {};
-    if (query.codigomedicamento) {
-      where.codigomedicamento = query.codigomedicamento;
-    }
-    if (query.vencidos === true) {
-      where.fechavencimiento = { lt: new Date() };
-    } else if (query.vencidos === false) {
-      where.fechavencimiento = { gte: new Date() };
-    }
-
-    const [lotes, total] = await Promise.all([
-      prisma.lote.findMany({
-        where,
-        include: {
-          medicamento: true,
-          almacen_medicamento: { include: { almacen: true } },
-        },
-        skip,
-        take: limit,
-        orderBy: { fechavencimiento: 'asc' },
-      }),
-      prisma.lote.count({ where }),
-    ]);
-
-    return {
-      data: lotes,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async createLote(data: {
-    codigolote: string;
-    codigomedicamento: string;
-    fechavencimiento: Date;
-    fechafabricacion?: Date;
-  }) {
-    return await prisma.lote.create({
-      data,
-      include: { medicamento: true },
-    });
-  }
-
-  async deleteLote(codigolote: string) {
-    return await prisma.lote.delete({
-      where: { codigolote },
     });
   }
 
@@ -283,13 +246,21 @@ class MedicamentoService {
   // ==========================================================
 
   async getExpiringBatches(days: number = 30) {
-    const result = await this.getLotes({ vencidos: false });
     const today = new Date();
     const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
     
-    const expiringBatches = result.data.filter((lote: any) => {
-      const vencimiento = new Date(lote.fechavencimiento);
-      return vencimiento >= today && vencimiento <= futureDate;
+    const expiringBatches = await prisma.lote.findMany({
+      where: {
+        fechavencimiento: {
+          gte: today,
+          lte: futureDate,
+        },
+      },
+      include: {
+        medicamento: true,
+        almacen_medicamento: { include: { almacen: true } },
+      },
+      orderBy: { fechavencimiento: 'asc' },
     });
 
     return {

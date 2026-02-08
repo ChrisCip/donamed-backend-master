@@ -190,18 +190,4 @@ router.delete('/:id', donacionController.deleteDonacion);
  */
 router.post('/:id/medicamentos', donacionController.addMedicamentosToDonacion);
 
-/**
- * @swagger
- * /api/v1/admin/stats/donations:
- *   get:
- *     summary: Estadísticas de donaciones
- *     tags: [Admin - Estadísticas]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Estadísticas de donaciones
- */
-router.get('/stats/donations', donacionController.getDonationsStats);
-
 export default router;

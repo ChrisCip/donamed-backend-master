@@ -3,7 +3,7 @@ import medicamentoService from '../services/medicamentoService.js';
 import type { ApiResponse } from '../types/index.js';
 
 /**
- * Controlador para gestión de Medicamentos, Lotes e Inventario
+ * Controlador para gestión de Medicamentos e Inventario
  */
 class MedicamentoController {
   // ==========================================================
@@ -69,49 +69,6 @@ class MedicamentoController {
     } catch (error) {
       next(error);
     }
-  }
-
-  // ==========================================================
-  // LOTES
-  // ==========================================================
-
-  async getLotes(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const query = {
-        page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string, 10) : undefined,
-        codigomedicamento: req.query.medicamento as string | undefined,
-        vencidos: req.query.vencidos === 'true' ? true : req.query.vencidos === 'false' ? false : undefined,
-      };
-      const result = await medicamentoService.getLotes(query);
-      res.status(200).json({ success: true, ...result });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async createLote(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const lote = await medicamentoService.createLote(req.body);
-      res.status(201).json({ success: true, data: lote, message: 'Lote creado exitosamente' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deleteLote(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const codigolote = req.params.id!;
-      await medicamentoService.deleteLote(codigolote);
-      res.status(200).json({ success: true, message: 'Lote eliminado exitosamente' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Obtener lotes con filtros (alias)
-  async getBatchesWithFilters(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    return this.getLotes(req, res, next);
   }
 
   // ==========================================================

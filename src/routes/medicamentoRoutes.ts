@@ -129,66 +129,6 @@ router.put('/medicamentos/:codigo', medicamentoController.updateMedicamento);
 router.delete('/medicamentos/:codigo', medicamentoController.deleteMedicamento);
 
 // ==========================================================
-// LOTES
-// ==========================================================
-
-/**
- * @swagger
- * /api/v1/admin/lotes:
- *   get:
- *     summary: Listar lotes
- *     tags: [Admin - Medicamentos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: medicamento
- *         schema:
- *           type: string
- *         description: Filtrar por medicamento
- *       - in: query
- *         name: vencidos
- *         schema:
- *           type: boolean
- *         description: Filtrar por vencidos/no vencidos
- *     responses:
- *       200:
- *         description: Lista de lotes
- *   post:
- *     summary: Crear lote
- *     tags: [Admin - Medicamentos]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - codigolote
- *               - codigomedicamento
- *               - fechavencimiento
- *             properties:
- *               codigolote:
- *                 type: string
- *               codigomedicamento:
- *                 type: string
- *               fechavencimiento:
- *                 type: string
- *                 format: date
- *               fechafabricacion:
- *                 type: string
- *                 format: date
- *     responses:
- *       201:
- *         description: Lote creado
- */
-router.get('/lotes', medicamentoController.getLotes);
-router.post('/lotes', medicamentoController.createLote);
-router.delete('/lotes/:id', medicamentoController.deleteLote);
-
-// ==========================================================
 // INVENTARIO
 // ==========================================================
 
@@ -246,24 +186,6 @@ router.delete('/lotes/:id', medicamentoController.deleteLote);
 router.get('/inventario', medicamentoController.getInventario);
 router.post('/inventario', medicamentoController.ajustarInventario);
 
-// ==========================================================
-// INVENTORY BATCHES Y STOCK
-// ==========================================================
-
-/**
- * @swagger
- * /api/v1/admin/inventory/batches:
- *   get:
- *     summary: Ver lotes con filtros
- *     tags: [Admin - Almacenes e Inventario]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de lotes
- */
-router.get('/inventory/batches', medicamentoController.getBatchesWithFilters);
-
 /**
  * @swagger
  * /api/v1/admin/inventory/stock:
@@ -277,25 +199,5 @@ router.get('/inventory/batches', medicamentoController.getBatchesWithFilters);
  *         description: Stock consolidado
  */
 router.get('/inventory/stock', medicamentoController.getConsolidatedStock);
-
-/**
- * @swagger
- * /api/v1/admin/stats/expiring:
- *   get:
- *     summary: Lotes próximos a vencer
- *     tags: [Admin - Estadísticas]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: days
- *         schema:
- *           type: integer
- *           default: 30
- *     responses:
- *       200:
- *         description: Lista de lotes próximos a vencer
- */
-router.get('/stats/expiring', medicamentoController.getExpiringBatches);
 
 export default router;

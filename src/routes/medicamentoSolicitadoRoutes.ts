@@ -48,9 +48,11 @@ const router = Router();
  *       400:
  *         description: Debe especificar un filtro
  *   post:
- *     summary: Agregar medicamento solicitado a una solicitud
+ *     summary: Agregar medicamento(s) solicitado(s) a una solicitud
  *     description: |
- *       Agrega un medicamento (texto libre) a una solicitud.
+ *       Agrega uno o varios medicamentos (texto libre) a una solicitud.
+ *       Puede enviar un solo medicamento con `nombre` y `dosis`, 
+ *       o múltiples con el array `medicamentos`.
  *       Solo funciona si la solicitud está en estado PENDIENTE, EN_REVISION o INCOMPLETA.
  *     tags: [Admin - Medicamentos Solicitados]
  *     security:
@@ -63,53 +65,21 @@ const router = Router();
  *             type: object
  *             required:
  *               - numerosolicitud
- *               - nombre
  *             properties:
  *               numerosolicitud:
  *                 type: integer
  *                 description: Número de la solicitud
  *               nombre:
  *                 type: string
- *                 description: Nombre del medicamento (texto libre)
+ *                 description: Nombre del medicamento (para agregar uno solo)
  *                 example: "Adalimumab 40mg"
  *               dosis:
  *                 type: string
- *                 description: Dosis indicada
+ *                 description: Dosis indicada (para agregar uno solo)
  *                 example: "1 vez por semana"
- *     responses:
- *       201:
- *         description: Medicamento agregado exitosamente
- *       400:
- *         description: Estado de solicitud no permite agregar medicamentos
- *       404:
- *         description: Solicitud no encontrada
- */
-router.get('/', medicamentoSolicitadoController.getMedicamentosSolicitados);
-router.post('/', medicamentoSolicitadoController.createMedicamentoSolicitado);
-
-/**
- * @swagger
- * /api/v1/admin/medicamentos-solicitados/bulk:
- *   post:
- *     summary: Agregar múltiples medicamentos solicitados
- *     description: Agrega varios medicamentos a una solicitud en una sola operación
- *     tags: [Admin - Medicamentos Solicitados]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - numerosolicitud
- *               - medicamentos
- *             properties:
- *               numerosolicitud:
- *                 type: integer
  *               medicamentos:
  *                 type: array
+ *                 description: Array de medicamentos (para agregar múltiples)
  *                 items:
  *                   type: object
  *                   required:
@@ -117,15 +87,18 @@ router.post('/', medicamentoSolicitadoController.createMedicamentoSolicitado);
  *                   properties:
  *                     nombre:
  *                       type: string
- *                       example: "Trastuzumab 440mg"
  *                     dosis:
  *                       type: string
- *                       example: "cada 3 semanas"
  *     responses:
  *       201:
- *         description: Medicamentos agregados
+ *         description: Medicamento(s) agregado(s) exitosamente
+ *       400:
+ *         description: Estado de solicitud no permite agregar medicamentos
+ *       404:
+ *         description: Solicitud no encontrada
  */
-router.post('/bulk', medicamentoSolicitadoController.createManyMedicamentosSolicitados);
+router.get('/', medicamentoSolicitadoController.getMedicamentosSolicitados);
+router.post('/', medicamentoSolicitadoController.createMedicamentoSolicitado);
 
 /**
  * @swagger

@@ -11,7 +11,8 @@ const router = Router();
  * @swagger
  * /api/v1/admin/solicitudes:
  *   get:
- *     summary: Listar solicitudes
+ *     summary: Listar solicitudes (excluye PENDIENTE por defecto)
+ *     description: Solo muestra solicitudes enviadas (EN_REVISION o posterior). Las solicitudes en PENDIENTE son borradores del usuario.
  *     tags: [Admin - Solicitudes]
  *     security:
  *       - bearerAuth: []
@@ -28,7 +29,7 @@ const router = Router();
  *         name: estado
  *         schema:
  *           type: string
- *           enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, DESPACHADA, CANCELADA, INCOMPLETA]
+ *           enum: [EN_REVISION, APROBADA, RECHAZADA, DESPACHADA, CANCELADA, INCOMPLETA]
  *     responses:
  *       200:
  *         description: Lista de solicitudes
@@ -94,80 +95,23 @@ router.post('/solicitudes', solicitudController.createSolicitud);
  *     responses:
  *       200:
  *         description: Detalle de solicitud
- *   put:
- *     summary: Actualizar solicitud
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               cedularepresentante:
- *                 type: string
- *               codigotiposolicitud:
- *                 type: string
- *               patologia:
- *                 type: string
- *               observaciones:
- *                 type: string
- *               documentos:
- *                 type: object
- *     responses:
- *       200:
- *         description: Solicitud actualizada
  */
 router.get('/solicitudes/:id', solicitudController.getSolicitudById);
-router.put('/solicitudes/:id', solicitudController.updateSolicitud);
-
-/**
- * @swagger
- * /api/v1/admin/solicitudes/{id}/evaluate:
- *   patch:
- *     summary: Evaluar solicitud (Aprobar/Rechazar)
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - estado
- *             properties:
- *               estado:
- *                 type: string
- *                 enum: [APROBADA, RECHAZADA, INCOMPLETA]
- *               observaciones:
- *                 type: string
- *                 description: Observaciones al cambiar el estado
- *     responses:
- *       200:
- *         description: Solicitud evaluada
- */
-router.patch('/solicitudes/:id/evaluate', solicitudController.evaluateSolicitud);
 
 /**
  * @swagger
  * /api/v1/admin/solicitudes/{id}/estado:
  *   patch:
  *     summary: Cambiar estado de solicitud
+ *     description: |
+ *       Transiciones válidas:
+ *       - PENDIENTE → EN_REVISION, CANCELADA
+ *       - EN_REVISION → APROBADA, RECHAZADA, INCOMPLETA, CANCELADA
+ *       - INCOMPLETA → EN_REVISION, CANCELADA
+ *       - APROBADA → DESPACHADA, CANCELADA
+ *       - RECHAZADA → EN_REVISION
+ *       - DESPACHADA → (estado final)
+ *       - CANCELADA → (estado final)
  *     tags: [Admin - Solicitudes]
  *     security:
  *       - bearerAuth: []
@@ -194,132 +138,9 @@ router.patch('/solicitudes/:id/evaluate', solicitudController.evaluateSolicitud)
  *     responses:
  *       200:
  *         description: Estado actualizado
+ *       400:
+ *         description: Transición de estado inválida
  */
 router.patch('/solicitudes/:id/estado', solicitudController.updateSolicitudEstado);
-
-/**
- * @swagger
- * /api/v1/admin/solicitudes/{id}/confirmar:
- *   patch:
- *     summary: Confirmar solicitud (PENDIENTE -> EN_REVISION)
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Solicitud confirmada y enviada a revisión
- */
-router.patch('/solicitudes/:id/confirmar', solicitudController.confirmarSolicitud);
-
-/**
- * @swagger
- * /api/v1/admin/solicitudes/{id}/detalle:
- *   post:
- *     summary: Agregar medicamento real a solicitud (Admin asigna lote del inventario)
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - idalmacen
- *               - codigolote
- *               - cantidad
- *             properties:
- *               idalmacen:
- *                 type: integer
- *               codigolote:
- *                 type: string
- *               cantidad:
- *                 type: integer
- *               dosis_indicada:
- *                 type: string
- *               tiempo_tratamiento:
- *                 type: string
- *     responses:
- *       201:
- *         description: Medicamento asignado
- *   delete:
- *     summary: Remover medicamento de solicitud
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - idalmacen
- *               - codigolote
- *             properties:
- *               idalmacen:
- *                 type: integer
- *               codigolote:
- *                 type: string
- *     responses:
- *       200:
- *         description: Medicamento removido
- */
-router.post('/solicitudes/:id/detalle', solicitudController.addDetalleSolicitud);
-router.delete('/solicitudes/:id/detalle', solicitudController.removeDetalleSolicitud);
-
-/**
- * @swagger
- * /api/v1/admin/solicitudes/{id}/medicamentos-solicitados:
- *   get:
- *     summary: Obtener medicamentos solicitados de una solicitud
- *     description: Lista los medicamentos que el paciente solicitó (texto libre)
- *     tags: [Admin - Solicitudes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lista de medicamentos solicitados
- */
-router.get('/solicitudes/:id/medicamentos-solicitados', solicitudController.getMedicamentosSolicitados);
-
-/**
- * @swagger
- * /api/v1/admin/stats/pathologies:
- *   get:
- *     summary: Top enfermedades/patologías solicitadas
- *     tags: [Admin - Estadísticas]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Top patologías solicitadas
- */
-router.get('/stats/pathologies', solicitudController.getPathologiesStats);
 
 export default router;

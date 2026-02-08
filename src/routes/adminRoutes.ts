@@ -8,6 +8,7 @@ import authRoutes from './authRoutes.js';
 import ubicacionRoutes from './ubicacionRoutes.js';
 import catalogoRoutes from './catalogoRoutes.js';
 import medicamentoRoutes from './medicamentoRoutes.js';
+import loteRoutes from './loteRoutes.js';
 import almacenRoutes from './almacenRoutes.js';
 import donacionRoutes from './donacionRoutes.js';
 import solicitudRoutes from './solicitudRoutes.js';
@@ -16,6 +17,10 @@ import dashboardRoutes from './dashboardRoutes.js';
 import despachoRoutes from './despachoRoutes.js';
 import proveedorRoutes from './proveedorRoutes.js';
 import medicamentoSolicitadoRoutes from './medicamentoSolicitadoRoutes.js';
+import enfermedadRoutes from './enfermedadRoutes.js';
+import viaAdministracionRoutes from './viaAdministracionRoutes.js';
+import formaFarmaceuticaRoutes from './formaFarmaceuticaRoutes.js';
+import categoriaRoutes from './categoriaRoutes.js';
 
 const router = Router();
 
@@ -138,11 +143,26 @@ router.use('/', dashboardRoutes);
 // Geografía (Provincias, Ciudades)
 router.use('/', ubicacionRoutes);
 
-// Catálogos (Roles, Categorías, Enfermedades, Vías, Formas, Tipos Solicitud)
+// Catálogos del sistema (Roles, Tipos Solicitud)
 router.use('/', catalogoRoutes);
 
-// Medicamentos, Lotes, Inventario
+// Enfermedades
+router.use('/enfermedades', enfermedadRoutes);
+
+// Categorías de medicamentos
+router.use('/categorias', categoriaRoutes);
+
+// Vías de administración
+router.use('/vias-administracion', viaAdministracionRoutes);
+
+// Formas farmacéuticas
+router.use('/formas-farmaceuticas', formaFarmaceuticaRoutes);
+
+// Medicamentos e Inventario
 router.use('/', medicamentoRoutes);
+
+// Lotes
+router.use('/lotes', loteRoutes);
 
 // Almacenes, Centros Médicos
 router.use('/', almacenRoutes);

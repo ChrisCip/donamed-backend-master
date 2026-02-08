@@ -2,6 +2,21 @@ import prisma from '../config/prisma.js';
 import type { AppError } from '../types/index.js';
 import { validarCedula } from '../utils/validators.js';
 
+// Select de usuario sin contraseña
+const usuarioSelectSinPassword = {
+  idusuario: true,
+  correo: true,
+  cedula_usuario: true,
+  codigo_rol: true,
+  ultimo_ingreso: true,
+  creado_en: true,
+  actualizado_en: true,
+  estado: true,
+  foto_url: true,
+  persona: true,
+  rol: true,
+};
+
 /**
  * Servicio para gestión de Despachos
  */
@@ -29,7 +44,7 @@ class DespachoService {
         include: {
           solicitud_despacho_solicitudTosolicitud: {
             include: {
-              usuario: { include: { persona: true } },
+              usuario: { select: usuarioSelectSinPassword },
               persona: true,
               tipo_solicitud: true,
               centro_medico: true,
@@ -70,7 +85,7 @@ class DespachoService {
       include: {
         solicitud_despacho_solicitudTosolicitud: {
           include: {
-            usuario: { include: { persona: true } },
+            usuario: { select: usuarioSelectSinPassword },
             persona: true,
             tipo_solicitud: true,
             centro_medico: true,
@@ -120,9 +135,10 @@ class DespachoService {
       }
     }
 
-    // Verificar que la solicitud existe
+    // Verificar que la solicitud existe e incluir datos del usuario
     const solicitud = await prisma.solicitud.findUnique({
       where: { numerosolicitud: data.solicitud },
+      include: { usuario: true },
     });
 
     if (!solicitud) {
@@ -136,6 +152,29 @@ class DespachoService {
       const error: AppError = new Error('La solicitud debe estar aprobada para poder despachar');
       error.statusCode = 400;
       throw error;
+    }
+
+    // Verificar que quien recibe sea el solicitante o su representante
+    if (data.cedula_recibe) {
+      if (!solicitud.usuario) {
+        const error: AppError = new Error('No se pudo verificar el usuario creador de la solicitud');
+        error.statusCode = 500;
+        throw error;
+      }
+
+      const cedulaUsuarioCreador = solicitud.usuario.cedula_usuario;
+      const cedulaRepresentante = solicitud.cedularepresentante;
+
+      const esUsuarioCreador = data.cedula_recibe === cedulaUsuarioCreador;
+      const esRepresentante = cedulaRepresentante && data.cedula_recibe === cedulaRepresentante;
+
+      if (!esUsuarioCreador && !esRepresentante) {
+        const error: AppError = new Error(
+          'El despacho solo puede entregarse al usuario que creó la solicitud o a su representante autorizado'
+        );
+        error.statusCode = 403;
+        throw error;
+      }
     }
 
     // Verificar que no exista ya un despacho para esta solicitud
@@ -160,7 +199,7 @@ class DespachoService {
         include: {
           solicitud_despacho_solicitudTosolicitud: {
             include: {
-              usuario: { include: { persona: true } },
+              usuario: { select: usuarioSelectSinPassword },
               detalle_solicitud: {
                 include: {
                   lote: { include: { medicamento: true } },

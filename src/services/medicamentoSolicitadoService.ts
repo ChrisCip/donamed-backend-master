@@ -1,6 +1,21 @@
 import prisma from '../config/prisma.js';
 import type { AppError } from '../types/index.js';
 
+// Select de usuario sin contraseña
+const usuarioSelectSinPassword = {
+  idusuario: true,
+  correo: true,
+  cedula_usuario: true,
+  codigo_rol: true,
+  ultimo_ingreso: true,
+  creado_en: true,
+  actualizado_en: true,
+  estado: true,
+  foto_url: true,
+  persona: true,
+  rol: true,
+};
+
 /**
  * Servicio para gestión de Medicamentos Solicitados
  * Esta tabla almacena los medicamentos que el paciente solicita (texto libre)
@@ -105,7 +120,7 @@ class MedicamentoSolicitadoService {
       include: {
         solicitud: {
           include: {
-            usuario: { include: { persona: true } },
+            usuario: { select: usuarioSelectSinPassword },
             tipo_solicitud: true,
             centro_medico: true,
           },
@@ -123,13 +138,28 @@ class MedicamentoSolicitadoService {
   }
 
   /**
-   * Agregar un medicamento solicitado a una solicitud
+   * Agregar medicamento(s) solicitado(s) a una solicitud
+   * Acepta un solo medicamento o un array de medicamentos
    */
   async createMedicamentoSolicitado(data: {
     numerosolicitud: number;
-    nombre: string;
+    nombre?: string;
     dosis?: string;
+    medicamentos?: Array<{ nombre: string; dosis?: string }>;
   }) {
+    // Validar que venga al menos un medicamento
+    const medicamentosList = data.medicamentos 
+      ? data.medicamentos 
+      : data.nombre 
+        ? [{ nombre: data.nombre, dosis: data.dosis }]
+        : [];
+
+    if (medicamentosList.length === 0) {
+      const error: AppError = new Error('Debe proporcionar al menos un medicamento');
+      error.statusCode = 400;
+      throw error;
+    }
+
     // Verificar que la solicitud existe
     const solicitud = await prisma.solicitud.findUnique({
       where: { numerosolicitud: data.numerosolicitud },
@@ -148,51 +178,30 @@ class MedicamentoSolicitadoService {
       throw error;
     }
 
-    return await prisma.medicamento_solicitado.create({
-      data: {
-        numerosolicitud: data.numerosolicitud,
-        nombre: data.nombre,
-        dosis: data.dosis,
-        creado_en: new Date(),
-      },
-      include: {
-        solicitud: {
-          select: {
-            numerosolicitud: true,
-            estado: true,
+    // Si es un solo medicamento, crear uno
+    if (medicamentosList.length === 1) {
+      const med = medicamentosList[0]!;
+      return await prisma.medicamento_solicitado.create({
+        data: {
+          numerosolicitud: data.numerosolicitud,
+          nombre: med.nombre,
+          dosis: med.dosis,
+          creado_en: new Date(),
+        },
+        include: {
+          solicitud: {
+            select: {
+              numerosolicitud: true,
+              estado: true,
+            },
           },
         },
-      },
-    });
-  }
-
-  /**
-   * Agregar múltiples medicamentos solicitados a una solicitud
-   */
-  async createManyMedicamentosSolicitados(data: {
-    numerosolicitud: number;
-    medicamentos: Array<{ nombre: string; dosis?: string }>;
-  }) {
-    // Verificar que la solicitud existe
-    const solicitud = await prisma.solicitud.findUnique({
-      where: { numerosolicitud: data.numerosolicitud },
-    });
-
-    if (!solicitud) {
-      const error: AppError = new Error('Solicitud no encontrada');
-      error.statusCode = 404;
-      throw error;
+      });
     }
 
-    // Verificar que la solicitud esté en estado que permita agregar medicamentos
-    if (solicitud.estado !== 'PENDIENTE' && solicitud.estado !== 'EN_REVISION' && solicitud.estado !== 'INCOMPLETA') {
-      const error: AppError = new Error('No se pueden agregar medicamentos a una solicitud en este estado');
-      error.statusCode = 400;
-      throw error;
-    }
-
+    // Si son múltiples, crear todos
     const medicamentosCreados = await prisma.medicamento_solicitado.createMany({
-      data: data.medicamentos.map((med) => ({
+      data: medicamentosList.map((med) => ({
         numerosolicitud: data.numerosolicitud,
         nombre: med.nombre,
         dosis: med.dosis,

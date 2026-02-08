@@ -40,31 +40,19 @@ class MedicamentoSolicitadoController {
   }
 
   /**
-   * Crear un medicamento solicitado
+   * Crear medicamento(s) solicitado(s)
+   * Acepta un solo medicamento o un array de medicamentos
    */
   async createMedicamentoSolicitado(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
-      const medicamento = await medicamentoSolicitadoService.createMedicamentoSolicitado(req.body);
-      res.status(201).json({
-        success: true,
-        data: medicamento,
-        message: 'Medicamento solicitado agregado exitosamente',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * Crear múltiples medicamentos solicitados
-   */
-  async createManyMedicamentosSolicitados(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const result = await medicamentoSolicitadoService.createManyMedicamentosSolicitados(req.body);
+      const result = await medicamentoSolicitadoService.createMedicamentoSolicitado(req.body);
+      const isMultiple = 'count' in result;
       res.status(201).json({
         success: true,
         data: result,
-        message: `${result.count} medicamentos agregados exitosamente`,
+        message: isMultiple 
+          ? `${result.count} medicamentos agregados exitosamente`
+          : 'Medicamento solicitado agregado exitosamente',
       });
     } catch (error) {
       next(error);

@@ -47,7 +47,11 @@ class AlmacenService {
     correo: string;
   }) {
     return await prisma.almacen.create({
-      data,
+      data: {
+        ...data,
+        creado_en: new Date(),
+        actualizado_en: new Date(),
+      },
       include: { ciudad: { include: { provincia: true } } },
     });
   }
@@ -155,7 +159,15 @@ class AlmacenService {
   async getCentroMedicoById(idcentro: number) {
     const centro = await prisma.centro_medico.findUnique({
       where: { idcentro },
-      include: { solicitud: true },
+      include: { 
+        solicitud: {
+          select: {
+            numerosolicitud: true,
+            estado: true,
+            patologia: true,
+          },
+        },
+      },
     });
 
     if (!centro) {

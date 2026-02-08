@@ -130,6 +130,7 @@ class ProveedorService {
       data: {
         ...data,
         creado_en: new Date(),
+        actualizado_en: new Date(),
       },
       include: { ciudad: { include: { provincia: true } } },
     });

@@ -12,14 +12,14 @@ datasource db {
 model almacen {
   idalmacen            Int                    @id @default(autoincrement())
   nombre               String                 @db.VarChar(100)
-  codigociudad         String?                @db.VarChar(10)
-  direccion            String?
-  estado               tipo_estado_general?   @default(ACTIVO)
+  codigociudad         String                 @db.VarChar(10)
+  direccion            String
+  estado               tipo_estado_general    @default(ACTIVO)
   telefono             String                 @db.VarChar
   correo               String                 @db.VarChar
-  creado_en            DateTime?              @db.Timestamp(6)
-  actualizado_en       DateTime?              @db.Timestamp(6)
-  ciudad               ciudad?                @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+  creado_en            DateTime               @db.Timestamp(6)
+  actualizado_en       DateTime               @default(now()) @db.Timestamp(6)
+  ciudad               ciudad                 @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
   almacen_medicamento  almacen_medicamento[]
   detalle_solicitud    detalle_solicitud[]
   donacion_medicamento donacion_medicamento[]
@@ -42,8 +42,8 @@ model almacen_medicamento {
 model categoria {
   idcategoria           Int                     @id @default(autoincrement())
   nombre                String                  @db.VarChar(50)
-  creado_en             DateTime?               @default(now()) @db.Timestamp(6)
-  actualizado_en        DateTime?               @db.Timestamp(6)
+  creado_en             DateTime                @default(now()) @db.Timestamp(6)
+  actualizado_en        DateTime                @default(now()) @db.Timestamp(6)
   categoria_medicamento categoria_medicamento[]
 }
 
@@ -59,10 +59,10 @@ model categoria_medicamento {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model centro_medico {
-  idcentro  Int                  @id @default(autoincrement())
-  nombre    String               @db.VarChar(150)
-  direccion String?              @db.VarChar(255)
-  estado    tipo_estado_general? @default(ACTIVO)
+  idcentro  Int                 @id @default(autoincrement())
+  nombre    String              @db.VarChar(150)
+  direccion String              @db.VarChar(255)
+  estado    tipo_estado_general @default(ACTIVO)
   solicitud solicitud[]
 }
 
@@ -79,12 +79,12 @@ model ciudad {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model despacho {
-  numerodespacho                          Int        @id @default(autoincrement())
-  solicitud                               Int?       @unique
-  fecha_despacho                          DateTime?  @default(now()) @db.Timestamp(6)
-  cedula_recibe                           String?    @db.VarChar(11)
-  persona                                 persona?   @relation(fields: [cedula_recibe], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
-  solicitud_despacho_solicitudTosolicitud solicitud? @relation("despacho_solicitudTosolicitud", fields: [solicitud], references: [numerosolicitud], onDelete: NoAction, onUpdate: NoAction)
+  numerodespacho                          Int       @id @default(autoincrement())
+  solicitud                               Int       @unique
+  fecha_despacho                          DateTime  @default(now()) @db.Timestamp(6)
+  cedula_recibe                           String    @db.VarChar(11)
+  persona                                 persona   @relation(fields: [cedula_recibe], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  solicitud_despacho_solicitudTosolicitud solicitud @relation("despacho_solicitudTosolicitud", fields: [solicitud], references: [numerosolicitud], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -93,8 +93,8 @@ model detalle_solicitud {
   idalmacen          Int
   codigolote         String    @db.VarChar(20)
   cantidad           Int
-  dosis_indicada     String?   @db.VarChar(100)
-  tiempo_tratamiento String?   @db.VarChar(100)
+  dosis_indicada     String    @db.VarChar(100)
+  tiempo_tratamiento String    @db.VarChar(100)
   lote               lote      @relation(fields: [codigolote], references: [codigolote], onDelete: NoAction, onUpdate: NoAction)
   almacen            almacen   @relation(fields: [idalmacen], references: [idalmacen], onDelete: NoAction, onUpdate: NoAction)
   solicitud          solicitud @relation(fields: [numerosolicitud], references: [numerosolicitud], onDelete: NoAction, onUpdate: NoAction)
@@ -118,19 +118,19 @@ model donacion_medicamento {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model donaciones {
   numerodonacion                            Int                    @id @default(autoincrement())
-  proveedor                                 String?                @db.VarChar(20)
-  fecha_recibida                            DateTime?              @default(now()) @db.Timestamp(6)
-  descripcion                               String?
+  proveedor                                 String                 @db.VarChar(20)
+  fecha_recibida                            DateTime               @default(now()) @db.Timestamp(6)
+  descripcion                               String
   donacion_medicamento                      donacion_medicamento[]
-  proveedor_donaciones_proveedorToproveedor proveedor?             @relation("donaciones_proveedorToproveedor", fields: [proveedor], references: [rncproveedor], onDelete: NoAction, onUpdate: NoAction)
+  proveedor_donaciones_proveedorToproveedor proveedor              @relation("donaciones_proveedorToproveedor", fields: [proveedor], references: [rncproveedor], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model enfermedad {
   idenfermedad           Int                      @id @default(autoincrement())
   nombre                 String                   @db.VarChar(150)
-  creado_en              DateTime?                @default(now()) @db.Timestamp(6)
-  actualizado_en         DateTime?                @db.Timestamp(6)
+  creado_en              DateTime                 @default(now()) @db.Timestamp(6)
+  actualizado_en         DateTime                 @default(now()) @db.Timestamp(6)
   enfermedad_medicamento enfermedad_medicamento[]
 }
 
@@ -156,7 +156,7 @@ model lote {
   codigolote           String                 @id @default(dbgenerated("nextval('lote_codigolote_seq'::regclass)")) @db.VarChar(20)
   codigomedicamento    String                 @db.VarChar(20)
   fechavencimiento     DateTime               @db.Date
-  fechafabricacion     DateTime?              @db.Date
+  fechafabricacion     DateTime               @db.Date
   almacen_medicamento  almacen_medicamento[]
   detalle_solicitud    detalle_solicitud[]
   donacion_medicamento donacion_medicamento[]
@@ -171,19 +171,19 @@ model medicamento {
   codigomedicamento          String                   @id @db.VarChar(20)
   nombre                     String                   @db.VarChar(150)
   descripcion                String?
-  compuesto_principal        String?                  @db.VarChar(150)
-  idforma_farmaceutica       Int?
-  cantidad_disponible_global Int?                     @default(0)
-  estado                     tipo_estado_general?     @default(ACTIVO)
-  creado_en                  DateTime?                @default(now()) @db.Timestamp(6)
-  actualizado_en             DateTime?                @db.Timestamp(6)
-  idvia_administracion       Int?
+  compuesto_principal        String                   @db.VarChar(150)
+  idforma_farmaceutica       Int
+  cantidad_disponible_global Int                      @default(0)
+  estado                     tipo_estado_general      @default(ACTIVO)
+  creado_en                  DateTime                 @default(now()) @db.Timestamp(6)
+  actualizado_en             DateTime                 @db.Timestamp(6)
+  idvia_administracion       Int
   almacen_medicamento        almacen_medicamento[]
   categoria_medicamento      categoria_medicamento[]
   enfermedad_medicamento     enfermedad_medicamento[]
   lote                       lote[]
-  via_administracion         via_administracion?      @relation(fields: [idvia_administracion], references: [idvia], onDelete: NoAction, onUpdate: NoAction, map: "fk_medicamento_via")
-  forma_farmaceutica         forma_farmaceutica?      @relation(fields: [idforma_farmaceutica], references: [idformafarmaceutica], onDelete: NoAction, onUpdate: NoAction)
+  via_administracion         via_administracion       @relation(fields: [idvia_administracion], references: [idvia], onDelete: NoAction, onUpdate: NoAction, map: "fk_medicamento_via")
+  forma_farmaceutica         forma_farmaceutica       @relation(fields: [idforma_farmaceutica], references: [idformafarmaceutica], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -191,16 +191,16 @@ model persona {
   cedula               String      @id @db.VarChar(11)
   nombre               String      @db.VarChar(100)
   apellidos            String      @db.VarChar(100)
-  sexo                 tipo_sexo?
-  fecha_nacimiento     DateTime?   @db.Date
-  telefono             String?     @db.VarChar(20)
+  sexo                 tipo_sexo
+  fecha_nacimiento     DateTime    @db.Date
+  telefono             String      @db.VarChar(20)
   telefono_alternativo String?     @db.VarChar(20)
-  codigociudad         String?     @db.VarChar(10)
-  direccion            String?
-  creado_en            DateTime?   @default(now()) @db.Timestamp(6)
-  actualizado_en       DateTime?   @default(now()) @db.Timestamp(6)
+  codigociudad         String      @db.VarChar(10)
+  direccion            String
+  creado_en            DateTime    @default(now()) @db.Timestamp(6)
+  actualizado_en       DateTime    @default(now()) @db.Timestamp(6)
   despacho             despacho[]
-  ciudad               ciudad?     @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+  ciudad               ciudad      @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
   solicitud            solicitud[]
   usuario              usuario[]
 }
@@ -209,14 +209,14 @@ model persona {
 model proveedor {
   rncproveedor                               String       @id @db.VarChar(20)
   nombre                                     String       @db.VarChar(150)
-  telefono                                   String?      @db.VarChar(20)
-  correo                                     String?      @db.VarChar(100)
-  codigociudad                               String?      @db.VarChar(10)
-  direccion                                  String?
-  creado_en                                  DateTime?    @default(now()) @db.Timestamp(6)
-  actualizado_en                             DateTime?    @db.Timestamp(6)
+  telefono                                   String       @db.VarChar(20)
+  correo                                     String       @db.VarChar(100)
+  codigociudad                               String       @db.VarChar(10)
+  direccion                                  String
+  creado_en                                  DateTime     @default(now()) @db.Timestamp(6)
+  actualizado_en                             DateTime     @db.Timestamp(6)
   donaciones_donaciones_proveedorToproveedor donaciones[] @relation("donaciones_proveedorToproveedor")
-  ciudad                                     ciudad?      @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
+  ciudad                                     ciudad       @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -230,32 +230,31 @@ model provincia {
 model rol {
   codigorol Int       @id @default(autoincrement())
   nombre    String    @db.VarChar(50)
-  creado_en DateTime? @default(now()) @db.Timestamp(6)
+  creado_en DateTime  @default(now()) @db.Timestamp(6)
   usuario   usuario[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model solicitud {
   numerosolicitud                        Int                      @id @default(autoincrement())
-  idusuario                              Int?
+  idusuario                              Int
   cedularepresentante                    String?                  @db.VarChar(11)
-  codigotiposolicitud                    String?                  @db.VarChar(20)
-  numeroafiliado                         String?                  @db.VarChar(50)
-  idcentro                               Int?
+  codigotiposolicitud                    String                   @db.VarChar(20)
+  idcentro                               Int
   relacion_solicitante                   String?                  @db.VarChar(50)
-  patologia                              String?                  @db.VarChar(150)
-  documentos                             Json?
-  estado                                 tipo_estado_solicitud?   @default(PENDIENTE)
-  creada_en                              DateTime?                @default(now()) @db.Timestamp(6)
-  actualizado_en                         DateTime?                @db.Timestamp(6)
+  patologia                              String                   @db.VarChar(150)
+  documentos                             Json
+  estado                                 tipo_estado_solicitud    @default(PENDIENTE)
+  creada_en                              DateTime                 @default(now()) @db.Timestamp(6)
+  actualizado_en                         DateTime                 @db.Timestamp(6)
   observaciones                          String?
   despacho_despacho_solicitudTosolicitud despacho?                @relation("despacho_solicitudTosolicitud")
   detalle_solicitud                      detalle_solicitud[]
   medicamento_solicitado                 medicamento_solicitado[]
   persona                                persona?                 @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
-  tipo_solicitud                         tipo_solicitud?          @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
-  centro_medico                          centro_medico?           @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
-  usuario                                usuario?                 @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
+  tipo_solicitud                         tipo_solicitud           @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
+  centro_medico                          centro_medico            @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
+  usuario                                usuario                  @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -267,19 +266,19 @@ model tipo_solicitud {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model usuario {
-  idusuario      Int                  @id @default(autoincrement())
-  correo         String               @unique @db.VarChar(100)
-  contrase_a     String               @map("contraseña") @db.VarChar(255)
-  cedula_usuario String?              @db.VarChar(11)
-  codigo_rol     Int?
-  ultimo_ingreso DateTime?            @db.Timestamp(6)
-  creado_en      DateTime?            @default(now()) @db.Timestamp(6)
-  actualizado_en DateTime?            @db.Timestamp(6)
-  estado         tipo_estado_general? @default(ACTIVO)
-  foto_url       String?              @db.VarChar(500)
+  idusuario      Int                 @id @default(autoincrement())
+  correo         String              @unique @db.VarChar(100)
+  contrase_a     String              @map("contraseña") @db.VarChar(255)
+  cedula_usuario String              @db.VarChar(11)
+  codigo_rol     Int
+  ultimo_ingreso DateTime?           @default(now()) @db.Timestamp(6)
+  creado_en      DateTime            @default(now()) @db.Timestamp(6)
+  actualizado_en DateTime            @db.Timestamp(6)
+  estado         tipo_estado_general @default(ACTIVO)
+  foto_url       String?             @db.VarChar(500)
   solicitud      solicitud[]
-  persona        persona?             @relation(fields: [cedula_usuario], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
-  rol            rol?                 @relation(fields: [codigo_rol], references: [codigorol], onDelete: NoAction, onUpdate: NoAction)
+  persona        persona             @relation(fields: [cedula_usuario], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
+  rol            rol                 @relation(fields: [codigo_rol], references: [codigorol], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -294,8 +293,7 @@ model medicamento_solicitado {
   id              Int       @id @default(autoincrement())
   numerosolicitud Int
   nombre          String    @db.VarChar(150)
-  dosis           String?   @db.VarChar(100)
-  creado_en       DateTime? @default(now()) @db.Timestamp(6)
+  creado_en       DateTime  @default(now()) @db.Timestamp(6)
   solicitud       solicitud @relation(fields: [numerosolicitud], references: [numerosolicitud], onDelete: Cascade, onUpdate: NoAction)
 }
 
