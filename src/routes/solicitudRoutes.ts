@@ -54,8 +54,8 @@ const router = Router();
  *                 type: string
  *               numeroafiliado:
  *                 type: string
- *               idcentro:
- *                 type: integer
+ *               centromedico:
+ *                 type: string
  *               relacion_solicitante:
  *                 type: string
  *               patologia:

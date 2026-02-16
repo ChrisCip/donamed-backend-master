@@ -139,11 +139,6 @@ class UserService {
             descripcion: true,
           },
         },
-        centro_medico: {
-          select: {
-            nombre: true,
-          },
-        },
         medicamento_solicitado: {
           select: {
             id: true,

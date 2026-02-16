@@ -3,7 +3,7 @@ import almacenService from '../services/almacenService.js';
 import type { ApiResponse } from '../types/index.js';
 
 /**
- * Controlador para gestión de Almacenes, Proveedores y Centros Médicos
+ * Controlador para gestión de Almacenes y Proveedores
  */
 class AlmacenController {
   // ==========================================================
@@ -110,57 +110,6 @@ class AlmacenController {
     }
   }
 
-  // ==========================================================
-  // CENTROS MÉDICOS
-  // ==========================================================
-
-  async getCentrosMedicos(_req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const centros = await almacenService.getCentrosMedicos();
-      res.status(200).json({ success: true, data: centros, count: centros.length });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getCentroMedicoById(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const idcentro = parseInt(req.params.id!, 10);
-      const centro = await almacenService.getCentroMedicoById(idcentro);
-      res.status(200).json({ success: true, data: centro });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async createCentroMedico(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const centro = await almacenService.createCentroMedico(req.body);
-      res.status(201).json({ success: true, data: centro, message: 'Centro médico creado exitosamente' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async updateCentroMedico(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const idcentro = parseInt(req.params.id!, 10);
-      const centro = await almacenService.updateCentroMedico(idcentro, req.body);
-      res.status(200).json({ success: true, data: centro, message: 'Centro médico actualizado exitosamente' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deleteCentroMedico(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
-    try {
-      const idcentro = parseInt(req.params.id!, 10);
-      await almacenService.deleteCentroMedico(idcentro);
-      res.status(200).json({ success: true, message: 'Centro médico eliminado exitosamente' });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 export default new AlmacenController();

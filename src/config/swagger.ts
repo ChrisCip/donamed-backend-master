@@ -211,13 +211,8 @@ const options: Options = {
               }
             },
             centroMedico: {
-              type: 'object',
-              properties: {
-                nombre: {
-                  type: 'string',
-                  example: 'Hospital General'
-                }
-              }
+              type: 'string',
+              example: 'Hospital General'
             },
             detalles: {
               type: 'array',

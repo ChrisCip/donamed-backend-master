@@ -164,7 +164,7 @@ router.use('/', medicamentoRoutes);
 // Lotes
 router.use('/lotes', loteRoutes);
 
-// Almacenes, Centros Médicos
+// Almacenes
 router.use('/', almacenRoutes);
 
 // Proveedores (endpoint independiente)

@@ -122,7 +122,6 @@ class MedicamentoSolicitadoService {
           include: {
             usuario: { select: usuarioSelectSinPassword },
             tipo_solicitud: true,
-            centro_medico: true,
           },
         },
       },

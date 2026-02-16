@@ -46,7 +46,6 @@ class SolicitudService {
           usuario: { select: usuarioSelectSinPassword },
           persona: true,
           tipo_solicitud: true,
-          centro_medico: true,
           medicamento_solicitado: true,
           detalle_solicitud: true,
           despacho_despacho_solicitudTosolicitud: true,
@@ -76,7 +75,6 @@ class SolicitudService {
         usuario: { select: usuarioSelectSinPassword },
         persona: true,
         tipo_solicitud: true,
-        centro_medico: true,
         medicamento_solicitado: true, // Medicamentos solicitados por paciente (texto libre)
         detalle_solicitud: {
           include: {
@@ -105,7 +103,7 @@ class SolicitudService {
     cedularepresentante?: string;
     codigotiposolicitud?: string;
     numeroafiliado?: string;
-    idcentro?: number;
+    centromedico?: string;
     relacion_solicitante?: string;
     patologia?: string;
     documentos?: any;
@@ -142,7 +140,6 @@ class SolicitudService {
         usuario: { select: usuarioSelectSinPassword },
         persona: true,
         tipo_solicitud: true,
-        centro_medico: true,
         medicamento_solicitado: true,
       },
     });

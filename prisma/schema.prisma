@@ -58,15 +58,6 @@ model categoria_medicamento {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model centro_medico {
-  idcentro  Int                 @id @default(autoincrement())
-  nombre    String              @db.VarChar(150)
-  direccion String              @db.VarChar(255)
-  estado    tipo_estado_general @default(ACTIVO)
-  solicitud solicitud[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ciudad {
   codigociudad    String      @id @db.VarChar(10)
   nombre          String      @db.VarChar(50)
@@ -240,7 +231,7 @@ model solicitud {
   idusuario                              Int
   cedularepresentante                    String?                  @db.VarChar(11)
   codigotiposolicitud                    String                   @db.VarChar(20)
-  idcentro                               Int
+  centromedico                           String                   @map("centroMedico") @db.VarChar(150)
   relacion_solicitante                   String?                  @db.VarChar(50)
   patologia                              String                   @db.VarChar(150)
   documentos                             Json
@@ -253,7 +244,6 @@ model solicitud {
   medicamento_solicitado                 medicamento_solicitado[]
   persona                                persona?                 @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
   tipo_solicitud                         tipo_solicitud           @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
-  centro_medico                          centro_medico            @relation(fields: [idcentro], references: [idcentro], onDelete: NoAction, onUpdate: NoAction)
   usuario                                usuario                  @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
 }
 

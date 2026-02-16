@@ -124,9 +124,7 @@ export interface SolicitudConDetalles {
   tipo_solicitud: {
     descripcion: string;
   } | null;
-  centro_medico: {
-    nombre: string;
-  } | null;
+  centromedico: string | null;
   detalle_solicitud: DetalleSolicitud[];
 }
 
@@ -286,21 +284,6 @@ export interface UpdateProveedorRequest {
 }
 
 // ==========================================================
-// TIPOS PARA ADMINISTRACIÓN - CENTROS MÉDICOS
-// ==========================================================
-
-export interface CreateCentroMedicoRequest {
-  nombre: string;
-  direccion?: string;
-}
-
-export interface UpdateCentroMedicoRequest {
-  nombre?: string;
-  direccion?: string;
-  estado?: 'ACTIVO' | 'INACTIVO';
-}
-
-// ==========================================================
 // TIPOS PARA ADMINISTRACIÓN - DONACIONES
 // ==========================================================
 
@@ -354,7 +337,7 @@ export interface CreateDespachoRequest {
 export interface SolicitudesFilterQuery extends PaginationQuery {
   estado?: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA';
   patologia?: string;
-  idcentro?: number;
+  centromedico?: string;
 }
 
 // ==========================================================

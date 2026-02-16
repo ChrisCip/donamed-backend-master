@@ -47,7 +47,6 @@ class DespachoService {
               usuario: { select: usuarioSelectSinPassword },
               persona: true,
               tipo_solicitud: true,
-              centro_medico: true,
               detalle_solicitud: {
                 include: {
                   lote: { include: { medicamento: true } },
@@ -88,7 +87,6 @@ class DespachoService {
             usuario: { select: usuarioSelectSinPassword },
             persona: true,
             tipo_solicitud: true,
-            centro_medico: true,
             detalle_solicitud: {
               include: {
                 lote: { include: { medicamento: true } },

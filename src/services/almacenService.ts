@@ -2,7 +2,7 @@ import prisma from '../config/prisma.js';
 import type { AppError } from '../types/index.js';
 
 /**
- * Servicio para gestión de Almacenes, Proveedores y Centros Médicos
+ * Servicio para gestión de Almacenes y Proveedores
  */
 class AlmacenService {
   // ==========================================================
@@ -146,58 +146,6 @@ class AlmacenService {
     });
   }
 
-  // ==========================================================
-  // CENTROS MÉDICOS
-  // ==========================================================
-
-  async getCentrosMedicos() {
-    return await prisma.centro_medico.findMany({
-      orderBy: { nombre: 'asc' },
-    });
-  }
-
-  async getCentroMedicoById(idcentro: number) {
-    const centro = await prisma.centro_medico.findUnique({
-      where: { idcentro },
-      include: { 
-        solicitud: {
-          select: {
-            numerosolicitud: true,
-            estado: true,
-            patologia: true,
-          },
-        },
-      },
-    });
-
-    if (!centro) {
-      const error: AppError = new Error('Centro médico no encontrado');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    return centro;
-  }
-
-  async createCentroMedico(data: { nombre: string; direccion?: string }) {
-    return await prisma.centro_medico.create({ data });
-  }
-
-  async updateCentroMedico(
-    idcentro: number,
-    data: { nombre?: string; direccion?: string; estado?: 'ACTIVO' | 'INACTIVO' }
-  ) {
-    return await prisma.centro_medico.update({
-      where: { idcentro },
-      data,
-    });
-  }
-
-  async deleteCentroMedico(idcentro: number) {
-    return await prisma.centro_medico.delete({
-      where: { idcentro },
-    });
-  }
 }
 
 export default new AlmacenService();

@@ -688,51 +688,6 @@ class AdminService {
   }
 
   // ==========================================================
-  // CENTROS MÉDICOS
-  // ==========================================================
-
-  async getCentrosMedicos() {
-    return await prisma.centro_medico.findMany({
-      orderBy: { nombre: 'asc' },
-    });
-  }
-
-  async getCentroMedicoById(idcentro: number) {
-    const centro = await prisma.centro_medico.findUnique({
-      where: { idcentro },
-      include: { solicitud: true },
-    });
-
-    if (!centro) {
-      const error: AppError = new Error('Centro médico no encontrado');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    return centro;
-  }
-
-  async createCentroMedico(data: { nombre: string; direccion?: string }) {
-    return await prisma.centro_medico.create({ data });
-  }
-
-  async updateCentroMedico(
-    idcentro: number,
-    data: { nombre?: string; direccion?: string; estado?: 'ACTIVO' | 'INACTIVO' }
-  ) {
-    return await prisma.centro_medico.update({
-      where: { idcentro },
-      data,
-    });
-  }
-
-  async deleteCentroMedico(idcentro: number) {
-    return await prisma.centro_medico.delete({
-      where: { idcentro },
-    });
-  }
-
-  // ==========================================================
   // DONACIONES
   // ==========================================================
 
@@ -892,7 +847,6 @@ class AdminService {
           usuario: { include: { persona: true } },
           persona: true,
           tipo_solicitud: true,
-          centro_medico: true,
           detalle_solicitud: {
             include: {
               lote: { include: { medicamento: true } },
@@ -926,7 +880,6 @@ class AdminService {
         usuario: { include: { persona: true } },
         persona: true,
         tipo_solicitud: true,
-        centro_medico: true,
         detalle_solicitud: {
           include: {
             lote: { include: { medicamento: true } },
