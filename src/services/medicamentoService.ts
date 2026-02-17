@@ -195,7 +195,7 @@ class MedicamentoService {
     codigomedicamento: string;
     cantidad: number;
   }) {
-    return await prisma.almacen_medicamento.upsert({
+    const result = await prisma.almacen_medicamento.upsert({
       where: {
         idalmacen_codigomedicamento_codigolote: {
           idalmacen: data.idalmacen,
@@ -211,6 +211,21 @@ class MedicamentoService {
         lote: true,
       },
     });
+
+    // Recalcular cantidad global desde el inventario real
+    const totalStock = await prisma.almacen_medicamento.aggregate({
+      where: { codigomedicamento: data.codigomedicamento },
+      _sum: { cantidad: true },
+    });
+
+    await prisma.medicamento.update({
+      where: { codigomedicamento: data.codigomedicamento },
+      data: {
+        cantidad_disponible_global: totalStock._sum.cantidad || 0,
+      },
+    });
+
+    return result;
   }
 
   // ==========================================================

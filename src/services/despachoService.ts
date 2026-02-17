@@ -110,33 +110,47 @@ class DespachoService {
   }
 
   /**
-   * Crear un nuevo despacho
+   * Crear un nuevo despacho completo
+   * Flujo: valida solicitud -> valida/crea detalles -> valida stock -> descuenta inventario -> crea despacho
    */
-  async createDespacho(data: { solicitud: number; cedula_recibe?: string }) {
-    // Validar cédula si se proporciona
-    if (data.cedula_recibe) {
-      if (!validarCedula(data.cedula_recibe)) {
-        const error: AppError = new Error('La cédula debe tener exactamente 11 dígitos numéricos');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      // Verificar que la persona existe
-      const persona = await prisma.persona.findUnique({
-        where: { cedula: data.cedula_recibe },
-      });
-
-      if (!persona) {
-        const error: AppError = new Error('La persona con la cédula proporcionada no existe en el sistema');
-        error.statusCode = 404;
-        throw error;
-      }
+  async createDespacho(data: {
+    solicitud: number;
+    cedula_recibe: string;
+    detalles?: Array<{
+      idalmacen: number;
+      codigolote: string;
+      cantidad: number;
+      dosis_indicada: string;
+      tiempo_tratamiento: string;
+    }>;
+  }) {
+    // 1. Validar cédula de quien recibe
+    if (!data.cedula_recibe) {
+      const error: AppError = new Error('La cédula de quien recibe es obligatoria');
+      error.statusCode = 400;
+      throw error;
     }
 
-    // Verificar que la solicitud existe e incluir datos del usuario
+    if (!validarCedula(data.cedula_recibe)) {
+      const error: AppError = new Error('La cédula debe tener exactamente 11 dígitos numéricos');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const persona = await prisma.persona.findUnique({
+      where: { cedula: data.cedula_recibe },
+    });
+
+    if (!persona) {
+      const error: AppError = new Error('La persona con la cédula proporcionada no existe en el sistema');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // 2. Verificar que la solicitud existe y está aprobada
     const solicitud = await prisma.solicitud.findUnique({
       where: { numerosolicitud: data.solicitud },
-      include: { usuario: true },
+      include: { detalle_solicitud: true },
     });
 
     if (!solicitud) {
@@ -145,37 +159,13 @@ class DespachoService {
       throw error;
     }
 
-    // Verificar que la solicitud esté aprobada
     if (solicitud.estado !== 'APROBADA') {
       const error: AppError = new Error('La solicitud debe estar aprobada para poder despachar');
       error.statusCode = 400;
       throw error;
     }
 
-    // Verificar que quien recibe sea el solicitante o su representante
-    if (data.cedula_recibe) {
-      if (!solicitud.usuario) {
-        const error: AppError = new Error('No se pudo verificar el usuario creador de la solicitud');
-        error.statusCode = 500;
-        throw error;
-      }
-
-      const cedulaUsuarioCreador = solicitud.usuario.cedula_usuario;
-      const cedulaRepresentante = solicitud.cedularepresentante;
-
-      const esUsuarioCreador = data.cedula_recibe === cedulaUsuarioCreador;
-      const esRepresentante = cedulaRepresentante && data.cedula_recibe === cedulaRepresentante;
-
-      if (!esUsuarioCreador && !esRepresentante) {
-        const error: AppError = new Error(
-          'El despacho solo puede entregarse al usuario que creó la solicitud o a su representante autorizado'
-        );
-        error.statusCode = 403;
-        throw error;
-      }
-    }
-
-    // Verificar que no exista ya un despacho para esta solicitud
+    // 3. Verificar que no exista ya un despacho para esta solicitud
     const despachoExistente = await prisma.despacho.findUnique({
       where: { solicitud: data.solicitud },
     });
@@ -186,9 +176,134 @@ class DespachoService {
       throw error;
     }
 
-    // Crear despacho y actualizar estado de solicitud en una transacción
-    const [despacho] = await prisma.$transaction([
-      prisma.despacho.create({
+    // 4. Determinar los detalles a despachar (nuevos o existentes)
+    const detallesADespachar = data.detalles || [];
+    const tieneDetallesPrevios = solicitud.detalle_solicitud.length > 0;
+
+    if (detallesADespachar.length === 0 && !tieneDetallesPrevios) {
+      const error: AppError = new Error(
+        'La solicitud no tiene medicamentos asignados. Proporcione los detalles del despacho (detalles) o asígnelos primero con PATCH /solicitudes/:id/detalles'
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // 5. Todo en una transacción: crear detalles (si vienen), validar stock, descontar, crear despacho
+    const despacho = await prisma.$transaction(async (tx) => {
+      // Si vienen detalles nuevos, reemplazar los existentes
+      if (detallesADespachar.length > 0) {
+        await tx.detalle_solicitud.deleteMany({
+          where: { numerosolicitud: data.solicitud },
+        });
+
+        // Validar lote, stock y crear detalles
+        for (const det of detallesADespachar) {
+          const lote = await tx.lote.findUnique({
+            where: { codigolote: det.codigolote },
+            include: { medicamento: true },
+          });
+          if (!lote) {
+            throw Object.assign(new Error(`Lote ${det.codigolote} no existe`), { statusCode: 400 });
+          }
+
+          const stock = await tx.almacen_medicamento.findUnique({
+            where: {
+              idalmacen_codigomedicamento_codigolote: {
+                idalmacen: det.idalmacen,
+                codigomedicamento: lote.codigomedicamento,
+                codigolote: det.codigolote,
+              },
+            },
+          });
+
+          if (!stock || stock.cantidad < det.cantidad) {
+            throw Object.assign(
+              new Error(`Stock insuficiente para ${lote.medicamento.nombre} (lote ${det.codigolote}) en almacén ${det.idalmacen}. Disponible: ${stock?.cantidad || 0}, solicitado: ${det.cantidad}`),
+              { statusCode: 400 }
+            );
+          }
+
+          await tx.detalle_solicitud.create({
+            data: {
+              numerosolicitud: data.solicitud,
+              idalmacen: det.idalmacen,
+              codigolote: det.codigolote,
+              cantidad: det.cantidad,
+              dosis_indicada: det.dosis_indicada,
+              tiempo_tratamiento: det.tiempo_tratamiento,
+            },
+          });
+        }
+      }
+
+      // Obtener los detalles finales con lote y medicamento para descontar
+      const detallesFinales = await tx.detalle_solicitud.findMany({
+        where: { numerosolicitud: data.solicitud },
+        include: {
+          lote: { include: { medicamento: true } },
+          almacen: true,
+        },
+      });
+
+      // Validar stock de los detalles existentes (si no se proporcionaron nuevos)
+      if (detallesADespachar.length === 0) {
+        for (const det of detallesFinales) {
+          const stock = await tx.almacen_medicamento.findUnique({
+            where: {
+              idalmacen_codigomedicamento_codigolote: {
+                idalmacen: det.idalmacen,
+                codigomedicamento: det.lote.codigomedicamento,
+                codigolote: det.codigolote,
+              },
+            },
+          });
+
+          if (!stock || stock.cantidad < det.cantidad) {
+            throw Object.assign(
+              new Error(`Stock insuficiente para ${det.lote.medicamento.nombre} (lote ${det.codigolote}) en almacén ${det.almacen.nombre}. Disponible: ${stock?.cantidad || 0}, solicitado: ${det.cantidad}`),
+              { statusCode: 400 }
+            );
+          }
+        }
+      }
+
+      // Descontar inventario por almacén/lote/medicamento (PK compuesto exacto)
+      const medicamentosAfectados = new Set<string>();
+
+      for (const det of detallesFinales) {
+        await tx.almacen_medicamento.update({
+          where: {
+            idalmacen_codigomedicamento_codigolote: {
+              idalmacen: det.idalmacen,
+              codigomedicamento: det.lote.codigomedicamento,
+              codigolote: det.codigolote,
+            },
+          },
+          data: {
+            cantidad: { decrement: det.cantidad },
+          },
+        });
+
+        medicamentosAfectados.add(det.lote.codigomedicamento);
+      }
+
+      // Recalcular stock global una sola vez por cada medicamento afectado
+      for (const codigomedicamento of medicamentosAfectados) {
+        const totalStock = await tx.almacen_medicamento.aggregate({
+          where: { codigomedicamento },
+          _sum: { cantidad: true },
+        });
+
+        await tx.medicamento.update({
+          where: { codigomedicamento },
+          data: {
+            cantidad_disponible_global: totalStock._sum.cantidad || 0,
+          },
+        });
+      }
+
+      // Crear despacho
+      const nuevoDespacho = await tx.despacho.create({
         data: {
           solicitud: data.solicitud,
           cedula_recibe: data.cedula_recibe,
@@ -198,24 +313,29 @@ class DespachoService {
           solicitud_despacho_solicitudTosolicitud: {
             include: {
               usuario: { select: usuarioSelectSinPassword },
+              persona: true,
+              tipo_solicitud: true,
+              medicamento_solicitado: true,
               detalle_solicitud: {
                 include: {
                   lote: { include: { medicamento: true } },
+                  almacen: true,
                 },
               },
             },
           },
           persona: true,
         },
-      }),
-      prisma.solicitud.update({
+      });
+
+      // Cambiar estado de solicitud a DESPACHADA
+      await tx.solicitud.update({
         where: { numerosolicitud: data.solicitud },
         data: { estado: 'DESPACHADA', actualizado_en: new Date() },
-      }),
-    ]);
+      });
 
-    // Descontar del inventario
-    await this.descontarInventario(data.solicitud);
+      return nuevoDespacho;
+    });
 
     return despacho;
   }
@@ -266,7 +386,7 @@ class DespachoService {
   }
 
   /**
-   * Eliminar un despacho (revertir el estado de la solicitud)
+   * Eliminar un despacho (revertir inventario y estado de la solicitud)
    */
   async deleteDespacho(numerodespacho: number) {
     const despacho = await prisma.despacho.findUnique({
@@ -277,6 +397,11 @@ class DespachoService {
       const error: AppError = new Error('Despacho no encontrado');
       error.statusCode = 404;
       throw error;
+    }
+
+    // Revertir el inventario descontado
+    if (despacho.solicitud) {
+      await this.revertirInventario(despacho.solicitud);
     }
 
     // Eliminar despacho y revertir estado de solicitud
@@ -290,45 +415,50 @@ class DespachoService {
       }),
     ]);
 
-    return { message: 'Despacho eliminado y solicitud revertida a estado APROBADA' };
+    return { message: 'Despacho eliminado, inventario revertido y solicitud revertida a estado APROBADA' };
   }
 
   /**
-   * Descontar del inventario los medicamentos despachados
+   * Revertir inventario al eliminar un despacho
    */
-  private async descontarInventario(numerosolicitud: number): Promise<void> {
+  private async revertirInventario(numerosolicitud: number): Promise<void> {
     const detalles = await prisma.detalle_solicitud.findMany({
       where: { numerosolicitud },
+      include: { lote: { include: { medicamento: true } } },
     });
 
+    const medicamentosAfectados = new Set<string>();
+
     for (const detalle of detalles) {
-      await prisma.almacen_medicamento.updateMany({
+      await prisma.almacen_medicamento.update({
         where: {
-          idalmacen: detalle.idalmacen,
-          codigolote: detalle.codigolote,
+          idalmacen_codigomedicamento_codigolote: {
+            idalmacen: detalle.idalmacen,
+            codigomedicamento: detalle.lote.codigomedicamento,
+            codigolote: detalle.codigolote,
+          },
         },
         data: {
-          cantidad: {
-            decrement: detalle.cantidad,
-          },
+          cantidad: { increment: detalle.cantidad },
         },
       });
 
-      // Actualizar cantidad global del medicamento
-      const lote = await prisma.lote.findUnique({
-        where: { codigolote: detalle.codigolote },
+      medicamentosAfectados.add(detalle.lote.codigomedicamento);
+    }
+
+    // Recalcular stock global una sola vez por medicamento
+    for (const codigomedicamento of medicamentosAfectados) {
+      const totalStock = await prisma.almacen_medicamento.aggregate({
+        where: { codigomedicamento },
+        _sum: { cantidad: true },
       });
 
-      if (lote) {
-        await prisma.medicamento.update({
-          where: { codigomedicamento: lote.codigomedicamento },
-          data: {
-            cantidad_disponible_global: {
-              decrement: detalle.cantidad,
-            },
-          },
-        });
-      }
+      await prisma.medicamento.update({
+        where: { codigomedicamento },
+        data: {
+          cantidad_disponible_global: totalStock._sum.cantidad || 0,
+        },
+      });
     }
   }
 }

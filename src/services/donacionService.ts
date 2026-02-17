@@ -188,11 +188,16 @@ class DonacionService {
               },
             });
 
-            // Actualizar cantidad global del medicamento
+            // Recalcular cantidad global desde el inventario real
+            const totalStock = await tx.almacen_medicamento.aggregate({
+              where: { codigomedicamento: lote.codigomedicamento },
+              _sum: { cantidad: true },
+            });
+
             await tx.medicamento.update({
               where: { codigomedicamento: lote.codigomedicamento },
               data: {
-                cantidad_disponible_global: { increment: med.cantidad },
+                cantidad_disponible_global: totalStock._sum.cantidad || 0,
               },
             });
           }
@@ -295,12 +300,17 @@ class DonacionService {
           },
         });
 
-        // Actualizar cantidad global del medicamento
+        // Recalcular cantidad global desde el inventario real
         if (med.lote) {
+          const totalStock = await tx.almacen_medicamento.aggregate({
+            where: { codigomedicamento: med.lote.codigomedicamento },
+            _sum: { cantidad: true },
+          });
+
           await tx.medicamento.update({
             where: { codigomedicamento: med.lote.codigomedicamento },
             data: {
-              cantidad_disponible_global: { decrement: med.cantidad },
+              cantidad_disponible_global: totalStock._sum.cantidad || 0,
             },
           });
         }
@@ -403,11 +413,16 @@ class DonacionService {
             },
           });
 
-          // Actualizar cantidad global
+          // Recalcular cantidad global desde el inventario real
+          const totalStock = await tx.almacen_medicamento.aggregate({
+            where: { codigomedicamento: lote.codigomedicamento },
+            _sum: { cantidad: true },
+          });
+
           await tx.medicamento.update({
             where: { codigomedicamento: lote.codigomedicamento },
             data: {
-              cantidad_disponible_global: { increment: med.cantidad },
+              cantidad_disponible_global: totalStock._sum.cantidad || 0,
             },
           });
         }

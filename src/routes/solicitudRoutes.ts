@@ -143,4 +143,112 @@ router.get('/solicitudes/:id', solicitudController.getSolicitudById);
  */
 router.patch('/solicitudes/:id/estado', solicitudController.updateSolicitudEstado);
 
+// ==========================================================
+// DETALLE DE SOLICITUD (asignación de medicamentos reales por el admin)
+// ==========================================================
+
+/**
+ * @swagger
+ * /api/v1/admin/solicitudes/{id}/detalles:
+ *   get:
+ *     summary: Obtener detalles asignados a una solicitud
+ *     description: Devuelve los medicamentos reales (lotes, almacenes, cantidades) asignados a la solicitud
+ *     tags: [Admin - Solicitudes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Número de solicitud
+ *     responses:
+ *       200:
+ *         description: Lista de detalles con info de lote, medicamento y almacén
+ *       404:
+ *         description: Solicitud no encontrada
+ *   patch:
+ *     summary: Asignar medicamentos reales a una solicitud
+ *     description: |
+ *       Permite al admin asignar medicamentos reales (de lotes/almacenes específicos) a una solicitud EN_REVISION.
+ *       Valida que los lotes y almacenes existan y que haya stock suficiente.
+ *       Reemplaza los detalles previos si los hubiera.
+ *     tags: [Admin - Solicitudes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Número de solicitud
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - detalles
+ *             properties:
+ *               detalles:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - idalmacen
+ *                     - codigolote
+ *                     - cantidad
+ *                     - dosis_indicada
+ *                     - tiempo_tratamiento
+ *                   properties:
+ *                     idalmacen:
+ *                       type: integer
+ *                       description: ID del almacén
+ *                     codigolote:
+ *                       type: string
+ *                       description: Código del lote
+ *                     cantidad:
+ *                       type: integer
+ *                       description: Cantidad a asignar
+ *                     dosis_indicada:
+ *                       type: string
+ *                       description: Dosis indicada por el médico
+ *                     tiempo_tratamiento:
+ *                       type: string
+ *                       description: Duración del tratamiento
+ *     responses:
+ *       200:
+ *         description: Medicamentos asignados exitosamente
+ *       400:
+ *         description: Solicitud no está EN_REVISION, stock insuficiente, lote/almacén no encontrado
+ *       404:
+ *         description: Solicitud no encontrada
+ *   delete:
+ *     summary: Eliminar todos los detalles de una solicitud
+ *     description: Elimina todos los medicamentos asignados. No se permite en solicitudes DESPACHADA.
+ *     tags: [Admin - Solicitudes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Número de solicitud
+ *     responses:
+ *       200:
+ *         description: Detalles eliminados exitosamente
+ *       400:
+ *         description: No se pueden eliminar detalles de solicitud despachada
+ *       404:
+ *         description: Solicitud no encontrada
+ */
+router.get('/solicitudes/:id/detalles', solicitudController.getDetallesSolicitud);
+router.patch('/solicitudes/:id/detalles', solicitudController.asignarDetalles);
+router.delete('/solicitudes/:id/detalles', solicitudController.eliminarDetalles);
+
 export default router;

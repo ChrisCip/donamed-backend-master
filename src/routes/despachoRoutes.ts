@@ -60,8 +60,12 @@ const router = Router();
  *                     totalPages:
  *                       type: integer
  *   post:
- *     summary: Crear un nuevo despacho
- *     description: Crea un despacho para una solicitud aprobada y descuenta del inventario
+ *     summary: Crear un nuevo despacho completo
+ *     description: |
+ *       Crea un despacho para una solicitud aprobada. Valida stock, descuenta del inventario
+ *       y actualiza el stock global de cada medicamento. Se puede usar de dos formas:
+ *       1. Con detalles previos asignados (via PATCH /solicitudes/:id/detalles) - solo enviar solicitud + cedula_recibe
+ *       2. Con detalles inline - enviar el array de detalles junto con la solicitud
  *     tags: [Admin - Despachos]
  *     security:
  *       - bearerAuth: []
@@ -73,6 +77,7 @@ const router = Router();
  *             type: object
  *             required:
  *               - solicitud
+ *               - cedula_recibe
  *             properties:
  *               solicitud:
  *                 type: integer
@@ -81,13 +86,40 @@ const router = Router();
  *                 type: string
  *                 description: Cédula de quien recibe (11 dígitos)
  *                 example: "00112233445"
+ *               detalles:
+ *                 type: array
+ *                 description: Medicamentos a despachar (opcional si ya fueron asignados previamente)
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - idalmacen
+ *                     - codigolote
+ *                     - cantidad
+ *                     - dosis_indicada
+ *                     - tiempo_tratamiento
+ *                   properties:
+ *                     idalmacen:
+ *                       type: integer
+ *                       description: ID del almacén de donde se despacha
+ *                     codigolote:
+ *                       type: string
+ *                       description: Código del lote a despachar
+ *                     cantidad:
+ *                       type: integer
+ *                       description: Cantidad a despachar
+ *                     dosis_indicada:
+ *                       type: string
+ *                       description: Dosis indicada por el médico
+ *                     tiempo_tratamiento:
+ *                       type: string
+ *                       description: Duración del tratamiento
  *     responses:
  *       201:
- *         description: Despacho creado exitosamente
+ *         description: Despacho creado exitosamente con detalle de lo despachado
  *       400:
- *         description: La solicitud no está aprobada o cédula inválida
+ *         description: Solicitud no aprobada, stock insuficiente, cédula inválida o sin detalles
  *       404:
- *         description: Solicitud no encontrada
+ *         description: Solicitud o persona no encontrada
  *       409:
  *         description: Ya existe un despacho para esta solicitud
  */
@@ -142,7 +174,7 @@ router.post('/', despachoController.createDespacho);
  *         description: Despacho no encontrado
  *   delete:
  *     summary: Eliminar un despacho
- *     description: Elimina el despacho y revierte el estado de la solicitud a APROBADA
+ *     description: Elimina el despacho, revierte el inventario descontado y cambia el estado de la solicitud a APROBADA
  *     tags: [Admin - Despachos]
  *     security:
  *       - bearerAuth: []

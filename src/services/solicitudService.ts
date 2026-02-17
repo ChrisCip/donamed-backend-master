@@ -34,10 +34,9 @@ class SolicitudService {
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
 
-    // Admin solo ve solicitudes que no estén en PENDIENTE (ya fueron enviadas)
     const where: Record<string, unknown> = query.estado 
       ? { estado: query.estado } 
-      : { estado: { not: 'PENDIENTE' } };
+      : {};
 
     const [solicitudes, total] = await Promise.all([
       prisma.solicitud.findMany({
@@ -180,9 +179,9 @@ class SolicitudService {
       'EN_REVISION': ['APROBADA', 'RECHAZADA', 'INCOMPLETA', 'CANCELADA'],
       'INCOMPLETA': ['EN_REVISION', 'CANCELADA'],
       'APROBADA': ['DESPACHADA', 'CANCELADA'],
-      'RECHAZADA': ['EN_REVISION'], // Puede volver a revisión si se reconsideran
+      'RECHAZADA': ['EN_REVISION', 'CANCELADA'],
       'DESPACHADA': [], // Estado final
-      'CANCELADA': [], // Estado final
+      'CANCELADA': ['PENDIENTE', 'EN_REVISION'], // Se puede revertir
     };
 
     const transicionesPermitidas = transicionesValidas[estadoActual] || [];
@@ -241,9 +240,156 @@ class SolicitudService {
   }
 
   // ==========================================================
-  // DETALLE DE SOLICITUD (Medicamentos reales aprobados por admin)
+  // DETALLE DE SOLICITUD (Medicamentos reales asignados por admin)
   // ==========================================================
 
+  /**
+   * Obtener detalles de una solicitud
+   */
+  async getDetallesSolicitud(numerosolicitud: number) {
+    const solicitud = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+    });
+
+    if (!solicitud) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return await prisma.detalle_solicitud.findMany({
+      where: { numerosolicitud },
+      include: {
+        lote: { include: { medicamento: true } },
+        almacen: true,
+      },
+    });
+  }
+
+  /**
+   * Asignar medicamentos reales (lotes/almacenes) a una solicitud
+   * Solo permitido cuando la solicitud está EN_REVISION
+   */
+  async asignarDetalles(
+    numerosolicitud: number,
+    detalles: Array<{
+      idalmacen: number;
+      codigolote: string;
+      cantidad: number;
+      dosis_indicada: string;
+      tiempo_tratamiento: string;
+    }>
+  ) {
+    const solicitud = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+    });
+
+    if (!solicitud) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (solicitud.estado !== 'EN_REVISION') {
+      const error: AppError = new Error('Solo se pueden asignar medicamentos a solicitudes EN_REVISION');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!detalles || detalles.length === 0) {
+      const error: AppError = new Error('Debe proporcionar al menos un detalle');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Validar que los lotes y almacenes existan y tengan stock suficiente
+    for (const det of detalles) {
+      const lote = await prisma.lote.findUnique({
+        where: { codigolote: det.codigolote },
+        include: { medicamento: true },
+      });
+      if (!lote) {
+        const error: AppError = new Error(`Lote ${det.codigolote} no existe`);
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const almacen = await prisma.almacen.findUnique({
+        where: { idalmacen: det.idalmacen },
+      });
+      if (!almacen) {
+        const error: AppError = new Error(`Almacén ${det.idalmacen} no existe`);
+        error.statusCode = 400;
+        throw error;
+      }
+
+      // Usar PK compuesto exacto de almacen_medicamento
+      const stock = await prisma.almacen_medicamento.findUnique({
+        where: {
+          idalmacen_codigomedicamento_codigolote: {
+            idalmacen: det.idalmacen,
+            codigomedicamento: lote.codigomedicamento,
+            codigolote: det.codigolote,
+          },
+        },
+      });
+
+      if (!stock || stock.cantidad < det.cantidad) {
+        const error: AppError = new Error(
+          `Stock insuficiente para ${lote.medicamento.nombre} (lote ${det.codigolote}) en almacén ${almacen.nombre}. Disponible: ${stock?.cantidad || 0}, solicitado: ${det.cantidad}`
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    // Eliminar detalles previos si los hubiera y crear los nuevos
+    await prisma.$transaction(async (tx) => {
+      await tx.detalle_solicitud.deleteMany({
+        where: { numerosolicitud },
+      });
+
+      await tx.detalle_solicitud.createMany({
+        data: detalles.map((det) => ({
+          numerosolicitud,
+          idalmacen: det.idalmacen,
+          codigolote: det.codigolote,
+          cantidad: det.cantidad,
+          dosis_indicada: det.dosis_indicada,
+          tiempo_tratamiento: det.tiempo_tratamiento,
+        })),
+      });
+    });
+
+    return await this.getDetallesSolicitud(numerosolicitud);
+  }
+
+  /**
+   * Eliminar todos los detalles de una solicitud
+   */
+  async eliminarDetalles(numerosolicitud: number) {
+    const solicitud = await prisma.solicitud.findUnique({
+      where: { numerosolicitud },
+    });
+
+    if (!solicitud) {
+      const error: AppError = new Error('Solicitud no encontrada');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (solicitud.estado === 'DESPACHADA') {
+      const error: AppError = new Error('No se pueden eliminar detalles de una solicitud despachada');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await prisma.detalle_solicitud.deleteMany({
+      where: { numerosolicitud },
+    });
+
+    return { message: 'Detalles eliminados exitosamente' };
+  }
 }
 
 export default new SolicitudService();

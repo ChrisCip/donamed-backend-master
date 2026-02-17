@@ -52,6 +52,40 @@ class SolicitudController {
       next(error);
     }
   }
+
+  // ==========================================================
+  // DETALLE DE SOLICITUD (asignación de medicamentos reales)
+  // ==========================================================
+
+  async getDetallesSolicitud(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const numerosolicitud = parseInt(req.params.id!, 10);
+      const detalles = await solicitudService.getDetallesSolicitud(numerosolicitud);
+      res.status(200).json({ success: true, data: detalles });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async asignarDetalles(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const numerosolicitud = parseInt(req.params.id!, 10);
+      const detalles = await solicitudService.asignarDetalles(numerosolicitud, req.body.detalles);
+      res.status(200).json({ success: true, data: detalles, message: 'Medicamentos asignados a la solicitud exitosamente' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async eliminarDetalles(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const numerosolicitud = parseInt(req.params.id!, 10);
+      const result = await solicitudService.eliminarDetalles(numerosolicitud);
+      res.status(200).json({ success: true, message: result.message });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new SolicitudController();
