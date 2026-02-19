@@ -71,6 +71,10 @@ const router = Router();
  *                 type: array
  *                 items:
  *                   type: integer
+ *               foto_url:
+ *                 type: string
+ *                 example: "https://supabase.storage.com/bucket/medicamentos/imagen.jpg"
+ *                 description: URL de la imagen del medicamento en Supabase Storage
  *     responses:
  *       201:
  *         description: Medicamento creado
@@ -106,6 +110,38 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
  *         required: true
  *         schema:
  *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               compuesto_principal:
+ *                 type: string
+ *               idvia_administracion:
+ *                 type: integer
+ *               idforma_farmaceutica:
+ *                 type: integer
+ *               estado:
+ *                 type: string
+ *                 enum: [ACTIVO, INACTIVO]
+ *               categorias:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               enfermedades:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               foto_url:
+ *                 type: string
+ *                 example: "https://supabase.storage.com/bucket/medicamentos/imagen.jpg"
+ *                 description: URL de la imagen del medicamento en Supabase Storage
  *     responses:
  *       200:
  *         description: Medicamento actualizado

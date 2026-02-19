@@ -86,6 +86,7 @@ class MedicamentoService {
     idforma_farmaceutica?: number;
     categorias?: number[];
     enfermedades?: number[];
+    foto_url?: string;
   }) {
     const { categorias, enfermedades, ...medicamentoData } = data;
 
@@ -124,6 +125,7 @@ class MedicamentoService {
       estado?: 'ACTIVO' | 'INACTIVO';
       categorias?: number[];
       enfermedades?: number[];
+      foto_url?: string;
     }
   ) {
     const { categorias, enfermedades, ...updateData } = data;
@@ -234,13 +236,14 @@ class MedicamentoService {
 
   async getConsolidatedStock() {
     const inventario = await this.getInventario({});
-    const stockByMedicamento: Record<string, { nombre: string; total: number; almacenes: any[] }> = {};
+    const stockByMedicamento: Record<string, { nombre: string; foto_url: string | null; total: number; almacenes: any[] }> = {};
     
     inventario.forEach((item: any) => {
       const codigo = item.codigomedicamento;
       if (!stockByMedicamento[codigo]) {
         stockByMedicamento[codigo] = {
           nombre: item.medicamento?.nombre || codigo,
+          foto_url: item.medicamento?.foto_url || null,
           total: 0,
           almacenes: []
         };

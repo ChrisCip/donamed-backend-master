@@ -125,6 +125,7 @@ class SolicitudService {
         ...solicitudData,
         estado: 'PENDIENTE',
         creada_en: new Date(),
+        actualizado_en: new Date(),
         medicamento_solicitado: medicamentos_solicitados
           ? {
               create: medicamentos_solicitados.map((med) => ({

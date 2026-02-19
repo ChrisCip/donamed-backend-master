@@ -22,6 +22,7 @@ class UserService {
         ultimo_ingreso: true,
         estado: true,
         creado_en: true,
+        foto_url: true,
         persona: {
           select: {
             cedula: true,

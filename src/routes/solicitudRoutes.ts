@@ -60,6 +60,12 @@ const router = Router();
  *                 type: string
  *               patologia:
  *                 type: string
+ *               documentos:
+ *                 type: object
+ *                 description: URLs de documentos del paciente en Supabase Storage
+ *                 example:
+ *                   cedula: "https://proyecto.supabase.co/storage/v1/object/public/documentos/cedula.pdf"
+ *                   receta: "https://proyecto.supabase.co/storage/v1/object/public/documentos/receta.pdf"
  *               observaciones:
  *                 type: string
  *               medicamentos_solicitados:

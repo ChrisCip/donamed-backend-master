@@ -17,7 +17,7 @@ model almacen {
   estado               tipo_estado_general    @default(ACTIVO)
   telefono             String                 @db.VarChar
   correo               String                 @db.VarChar
-  creado_en            DateTime               @db.Timestamp(6)
+  creado_en            DateTime               @default(now()) @db.Timestamp(6)
   actualizado_en       DateTime               @default(now()) @db.Timestamp(6)
   ciudad               ciudad                 @relation(fields: [codigociudad], references: [codigociudad], onDelete: NoAction, onUpdate: NoAction)
   almacen_medicamento  almacen_medicamento[]
@@ -169,6 +169,7 @@ model medicamento {
   creado_en                  DateTime                 @default(now()) @db.Timestamp(6)
   actualizado_en             DateTime                 @db.Timestamp(6)
   idvia_administracion       Int
+  foto_url                   String?                  @db.VarChar(500)
   almacen_medicamento        almacen_medicamento[]
   categoria_medicamento      categoria_medicamento[]
   enfermedad_medicamento     enfermedad_medicamento[]
@@ -231,7 +232,7 @@ model solicitud {
   idusuario                              Int
   cedularepresentante                    String?                  @db.VarChar(11)
   codigotiposolicitud                    String                   @db.VarChar(20)
-  centromedico                           String                   @map("centroMedico") @db.VarChar(150)
+  centromedico                           String                   @map("centroMedico") @db.VarChar
   relacion_solicitante                   String?                  @db.VarChar(50)
   patologia                              String                   @db.VarChar(150)
   documentos                             Json
