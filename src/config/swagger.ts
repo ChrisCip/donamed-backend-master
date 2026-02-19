@@ -14,8 +14,8 @@ const options: Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Servidor de Desarrollo'
+        url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+        description: process.env.VERCEL_URL ? 'Servidor Vercel' : 'Servidor de Desarrollo'
       },
       {
         url: 'https://api.donamed.do',
