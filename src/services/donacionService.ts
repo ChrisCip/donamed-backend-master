@@ -140,7 +140,8 @@ class DonacionService {
       // Crear la donación
       const nuevaDonacion = await tx.donaciones.create({
         data: {
-          ...donacionData,
+          proveedor: donacionData.proveedor ?? '',
+          descripcion: donacionData.descripcion ?? '',
           fecha_recibida: new Date(),
           donacion_medicamento: medicamentos
             ? {

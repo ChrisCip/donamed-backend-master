@@ -144,7 +144,6 @@ class UserService {
           select: {
             id: true,
             nombre: true,
-            dosis: true,
           },
         },
         detalle_solicitud: {

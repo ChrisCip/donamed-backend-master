@@ -89,7 +89,6 @@ class MedicamentoSolicitadoService {
       id: med.id,
       numerosolicitud: med.numerosolicitud,
       medicamento: med.nombre,
-      dosis: med.dosis,
       solicitud: {
         numerosolicitud: med.solicitud.numerosolicitud,
         estado: med.solicitud.estado,
@@ -143,14 +142,13 @@ class MedicamentoSolicitadoService {
   async createMedicamentoSolicitado(data: {
     numerosolicitud: number;
     nombre?: string;
-    dosis?: string;
-    medicamentos?: Array<{ nombre: string; dosis?: string }>;
+    medicamentos?: Array<{ nombre: string }>;
   }) {
     // Validar que venga al menos un medicamento
     const medicamentosList = data.medicamentos 
       ? data.medicamentos 
       : data.nombre 
-        ? [{ nombre: data.nombre, dosis: data.dosis }]
+        ? [{ nombre: data.nombre }]
         : [];
 
     if (medicamentosList.length === 0) {
@@ -184,7 +182,6 @@ class MedicamentoSolicitadoService {
         data: {
           numerosolicitud: data.numerosolicitud,
           nombre: med.nombre,
-          dosis: med.dosis,
           creado_en: new Date(),
         },
         include: {
@@ -203,7 +200,6 @@ class MedicamentoSolicitadoService {
       data: medicamentosList.map((med) => ({
         numerosolicitud: data.numerosolicitud,
         nombre: med.nombre,
-        dosis: med.dosis,
         creado_en: new Date(),
       })),
     });
@@ -219,7 +215,7 @@ class MedicamentoSolicitadoService {
    */
   async updateMedicamentoSolicitado(
     id: number,
-    data: { nombre?: string; dosis?: string }
+    data: { nombre?: string }
   ) {
     // Verificar que existe
     const existente = await prisma.medicamento_solicitado.findUnique({

@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { Prisma } from '@prisma/client';
 import type { AppError } from '../types/index.js';
 import { validarRNC } from '../utils/validators.js';
 
@@ -128,10 +129,15 @@ class ProveedorService {
 
     return await prisma.proveedor.create({
       data: {
-        ...data,
+        rncproveedor: data.rncproveedor,
+        nombre: data.nombre,
+        telefono: data.telefono ?? '',
+        correo: data.correo ?? '',
+        direccion: data.direccion ?? '',
+        ...(data.codigociudad !== undefined && { codigociudad: data.codigociudad }),
         creado_en: new Date(),
         actualizado_en: new Date(),
-      },
+      } as Prisma.proveedorUncheckedCreateInput,
       include: { ciudad: { include: { provincia: true } } },
     });
   }

@@ -107,7 +107,7 @@ class SolicitudService {
     patologia?: string;
     documentos?: any;
     observaciones?: string;
-    medicamentos_solicitados?: Array<{ nombre: string; dosis?: string }>;
+    medicamentos_solicitados?: Array<{ nombre: string }>;
   }) {
     // Validar cédula del representante si se proporciona
     if (data.cedularepresentante) {
@@ -122,7 +122,14 @@ class SolicitudService {
 
     return await prisma.solicitud.create({
       data: {
-        ...solicitudData,
+        idusuario: solicitudData.idusuario ?? 0,
+        cedularepresentante: solicitudData.cedularepresentante,
+        codigotiposolicitud: solicitudData.codigotiposolicitud ?? 'PRIMERA_SOLICITUD',
+        centromedico: solicitudData.centromedico ?? '',
+        relacion_solicitante: solicitudData.relacion_solicitante,
+        patologia: solicitudData.patologia ?? '',
+        documentos: solicitudData.documentos ?? {},
+        observaciones: solicitudData.observaciones,
         estado: 'PENDIENTE',
         creada_en: new Date(),
         actualizado_en: new Date(),
@@ -130,7 +137,6 @@ class SolicitudService {
           ? {
               create: medicamentos_solicitados.map((med) => ({
                 nombre: med.nombre,
-                dosis: med.dosis,
                 creado_en: new Date(),
               })),
             }

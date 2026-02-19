@@ -4,8 +4,7 @@ import type {
   AuthenticatedRequest, 
   ApiResponse, 
   UserProfile,
-  UpdateProfileRequest,
-  SolicitudConDetalles 
+  UpdateProfileRequest
 } from '../types/index.js';
 
 /**
@@ -94,7 +93,8 @@ class UserController {
    */
   async getUserRequests(
     req: AuthenticatedRequest,
-    res: Response<ApiResponse<SolicitudConDetalles[]>>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    res: Response<ApiResponse<any[]>>,
     next: NextFunction
   ): Promise<void> {
     try {

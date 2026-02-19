@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { AppError } from '../types/index.js';
 
@@ -81,8 +82,9 @@ class PersonaService {
       data: {
         correo: data.correo,
         contrase_a: hashedPassword,
-        cedula_usuario: data.cedula_usuario,
-        codigo_rol: data.codigo_rol,
+        cedula_usuario: data.cedula_usuario ?? '',
+        codigo_rol: data.codigo_rol ?? 2,
+        actualizado_en: new Date(),
       },
       include: {
         persona: true,
@@ -198,7 +200,19 @@ class PersonaService {
     direccion?: string;
   }) {
     return await prisma.persona.create({
-      data,
+      data: {
+        cedula: data.cedula,
+        nombre: data.nombre,
+        apellidos: data.apellidos,
+        sexo: data.sexo ?? 'M',
+        fecha_nacimiento: data.fecha_nacimiento ?? new Date(),
+        telefono: data.telefono ?? '',
+        ...(data.telefono_alternativo !== undefined && { telefono_alternativo: data.telefono_alternativo }),
+        ...(data.codigociudad !== undefined && { codigociudad: data.codigociudad }),
+        direccion: data.direccion ?? '',
+        creado_en: new Date(),
+        actualizado_en: new Date(),
+      } as Prisma.personaUncheckedCreateInput,
       include: { ciudad: { include: { provincia: true } } },
     });
   }

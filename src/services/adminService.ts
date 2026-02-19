@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/jwt.js';
 import type { AppError } from '../types/index.js';
@@ -434,7 +435,13 @@ class AdminService {
 
     return await prisma.medicamento.create({
       data: {
-        ...medicamentoData,
+        codigomedicamento: medicamentoData.codigomedicamento,
+        nombre: medicamentoData.nombre,
+        descripcion: medicamentoData.descripcion ?? '',
+        compuesto_principal: medicamentoData.compuesto_principal ?? '',
+        ...(medicamentoData.idvia_administracion !== undefined && { idvia_administracion: medicamentoData.idvia_administracion }),
+        ...(medicamentoData.idforma_farmaceutica !== undefined && { idforma_farmaceutica: medicamentoData.idforma_farmaceutica }),
+        actualizado_en: new Date(),
         categoria_medicamento: categorias?.length
           ? {
               create: categorias.map((idcategoria) => ({ idcategoria })),
@@ -445,7 +452,7 @@ class AdminService {
               create: enfermedades.map((idenfermedad) => ({ idenfermedad })),
             }
           : undefined,
-      },
+      } as Prisma.medicamentoUncheckedCreateInput,
       include: {
         via_administracion: true,
         forma_farmaceutica: true,
@@ -539,7 +546,12 @@ class AdminService {
     fechafabricacion?: Date;
   }) {
     return await prisma.lote.create({
-      data,
+      data: {
+        codigolote: data.codigolote,
+        codigomedicamento: data.codigomedicamento,
+        fechavencimiento: data.fechavencimiento,
+        fechafabricacion: data.fechafabricacion ?? new Date(),
+      },
       include: { medicamento: true },
     });
   }
@@ -592,7 +604,15 @@ class AdminService {
     correo: string;
   }) {
     return await prisma.almacen.create({
-      data,
+      data: {
+        nombre: data.nombre,
+        telefono: data.telefono,
+        correo: data.correo,
+        direccion: data.direccion ?? '',
+        ...(data.codigociudad !== undefined && { codigociudad: data.codigociudad }),
+        creado_en: new Date(),
+        actualizado_en: new Date(),
+      } as Prisma.almacenUncheckedCreateInput,
       include: { ciudad: { include: { provincia: true } } },
     });
   }
@@ -659,7 +679,16 @@ class AdminService {
     direccion?: string;
   }) {
     return await prisma.proveedor.create({
-      data,
+      data: {
+        rncproveedor: data.rncproveedor,
+        nombre: data.nombre,
+        telefono: data.telefono ?? '',
+        correo: data.correo ?? '',
+        direccion: data.direccion ?? '',
+        ...(data.codigociudad !== undefined && { codigociudad: data.codigociudad }),
+        creado_en: new Date(),
+        actualizado_en: new Date(),
+      } as Prisma.proveedorUncheckedCreateInput,
       include: { ciudad: { include: { provincia: true } } },
     });
   }
@@ -738,7 +767,9 @@ class AdminService {
 
     return await prisma.donaciones.create({
       data: {
-        ...donacionData,
+        proveedor: donacionData.proveedor ?? '',
+        descripcion: donacionData.descripcion ?? '',
+        fecha_recibida: new Date(),
         donacion_medicamento: {
           create: medicamentos,
         },
@@ -977,7 +1008,11 @@ class AdminService {
     // Crear despacho y actualizar estado de solicitud
     const [despacho] = await prisma.$transaction([
       prisma.despacho.create({
-        data,
+        data: {
+          solicitud: data.solicitud,
+          cedula_recibe: data.cedula_recibe ?? '',
+          fecha_despacho: new Date(),
+        },
         include: {
           solicitud_despacho_solicitudTosolicitud: true,
           persona: true,
@@ -1067,8 +1102,9 @@ class AdminService {
       data: {
         correo: data.correo,
         contrase_a: hashedPassword,
-        cedula_usuario: data.cedula_usuario,
-        codigo_rol: data.codigo_rol,
+        cedula_usuario: data.cedula_usuario ?? '',
+        codigo_rol: data.codigo_rol ?? 2,
+        actualizado_en: new Date(),
       },
       include: {
         persona: true,
@@ -1184,7 +1220,19 @@ class AdminService {
     direccion?: string;
   }) {
     return await prisma.persona.create({
-      data,
+      data: {
+        cedula: data.cedula,
+        nombre: data.nombre,
+        apellidos: data.apellidos,
+        sexo: data.sexo ?? 'M',
+        fecha_nacimiento: data.fecha_nacimiento ?? new Date(),
+        telefono: data.telefono ?? '',
+        ...(data.telefono_alternativo !== undefined && { telefono_alternativo: data.telefono_alternativo }),
+        ...(data.codigociudad !== undefined && { codigociudad: data.codigociudad }),
+        direccion: data.direccion ?? '',
+        creado_en: new Date(),
+        actualizado_en: new Date(),
+      } as Prisma.personaUncheckedCreateInput,
       include: { ciudad: { include: { provincia: true } } },
     });
   }

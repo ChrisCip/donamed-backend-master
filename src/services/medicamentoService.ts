@@ -92,7 +92,13 @@ class MedicamentoService {
 
     return await prisma.medicamento.create({
       data: {
-        ...medicamentoData,
+        codigomedicamento: medicamentoData.codigomedicamento,
+        nombre: medicamentoData.nombre,
+        descripcion: medicamentoData.descripcion,
+        compuesto_principal: medicamentoData.compuesto_principal ?? '',
+        idvia_administracion: medicamentoData.idvia_administracion ?? 1,
+        idforma_farmaceutica: medicamentoData.idforma_farmaceutica ?? 1,
+        foto_url: medicamentoData.foto_url,
         actualizado_en: new Date(),
         categoria_medicamento: categorias?.length
           ? {
