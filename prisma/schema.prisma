@@ -23,6 +23,7 @@ model almacen {
   almacen_medicamento  almacen_medicamento[]
   detalle_solicitud    detalle_solicitud[]
   donacion_medicamento donacion_medicamento[]
+  solicitud_retiro     solicitud[]            @relation("solicitud_retiro")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -240,12 +241,14 @@ model solicitud {
   creada_en                              DateTime                 @default(now()) @db.Timestamp(6)
   actualizado_en                         DateTime                 @db.Timestamp(6)
   observaciones                          String?
+  idalmacen_retiro                       Int?                  @map("solicitud_de_retiro")
   despacho_despacho_solicitudTosolicitud despacho?                @relation("despacho_solicitudTosolicitud")
   detalle_solicitud                      detalle_solicitud[]
   medicamento_solicitado                 medicamento_solicitado[]
   persona                                persona?                 @relation(fields: [cedularepresentante], references: [cedula], onDelete: NoAction, onUpdate: NoAction)
   tipo_solicitud                         tipo_solicitud           @relation(fields: [codigotiposolicitud], references: [codigotiposolicitud], onDelete: NoAction, onUpdate: NoAction)
   usuario                                usuario                  @relation(fields: [idusuario], references: [idusuario], onDelete: NoAction, onUpdate: NoAction)
+  almacen_retiro                         almacen?                 @relation("solicitud_retiro", fields: [idalmacen_retiro], references: [idalmacen], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

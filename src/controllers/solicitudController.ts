@@ -46,7 +46,13 @@ class SolicitudController {
   async updateSolicitudEstado(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
       const numerosolicitud = parseInt(req.params.id!, 10);
-      const solicitud = await solicitudService.updateSolicitudEstado(numerosolicitud, req.body);
+      const body = req.body as { estado: string; observaciones?: string; idalmacen_retiro?: number; solicitud_de_retiro?: number };
+      const data = {
+        estado: body.estado as 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA',
+        observaciones: body.observaciones,
+        idalmacen_retiro: body.idalmacen_retiro ?? body.solicitud_de_retiro,
+      };
+      const solicitud = await solicitudService.updateSolicitudEstado(numerosolicitud, data);
       res.status(200).json({ success: true, data: solicitud, message: 'Estado de solicitud actualizado exitosamente' });
     } catch (error) {
       next(error);

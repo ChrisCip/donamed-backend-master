@@ -141,6 +141,9 @@ router.get('/solicitudes/:id', solicitudController.getSolicitudById);
  *                 enum: [PENDIENTE, EN_REVISION, APROBADA, RECHAZADA, DESPACHADA, CANCELADA, INCOMPLETA]
  *               observaciones:
  *                 type: string
+ *               idalmacen_retiro:
+ *                 type: integer
+ *                 description: Obligatorio al aprobar. ID del almacén donde el cliente retirará (también acepta solicitud_de_retiro).
  *     responses:
  *       200:
  *         description: Estado actualizado

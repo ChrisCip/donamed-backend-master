@@ -48,6 +48,7 @@ class SolicitudService {
           medicamento_solicitado: true,
           detalle_solicitud: true,
           despacho_despacho_solicitudTosolicitud: true,
+          almacen_retiro: { include: { ciudad: true } },
         },
         skip,
         take: limit,
@@ -82,6 +83,7 @@ class SolicitudService {
           },
         },
         despacho_despacho_solicitudTosolicitud: { include: { persona: true } },
+        almacen_retiro: { include: { ciudad: true } },
       },
     });
 
@@ -161,6 +163,7 @@ class SolicitudService {
     data: {
       estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'DESPACHADA' | 'EN_REVISION' | 'CANCELADA' | 'INCOMPLETA';
       observaciones?: string;
+      idalmacen_retiro?: number;
     }
   ) {
     const solicitud = await prisma.solicitud.findUnique({
@@ -209,12 +212,30 @@ class SolicitudService {
       }
     }
 
+    // Al aprobar: se requiere asignar el almacén de retiro
+    if (nuevoEstado === 'APROBADA') {
+      if (!data.idalmacen_retiro) {
+        const error: AppError = new Error('Al aprobar la solicitud debe asignar el almacén de retiro (idalmacen_retiro)');
+        error.statusCode = 400;
+        throw error;
+      }
+      const almacen = await prisma.almacen.findUnique({
+        where: { idalmacen: data.idalmacen_retiro },
+      });
+      if (!almacen) {
+        const error: AppError = new Error(`Almacén ${data.idalmacen_retiro} no existe`);
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
     return await prisma.solicitud.update({
       where: { numerosolicitud },
       data: {
         estado: nuevoEstado,
         observaciones: data.observaciones,
         actualizado_en: new Date(),
+        ...(nuevoEstado === 'APROBADA' && data.idalmacen_retiro && { idalmacen_retiro: data.idalmacen_retiro }),
       },
       include: {
         usuario: { select: usuarioSelectSinPassword },
@@ -226,6 +247,7 @@ class SolicitudService {
             almacen: true,
           },
         },
+        almacen_retiro: { include: { ciudad: true } },
       },
     });
   }
