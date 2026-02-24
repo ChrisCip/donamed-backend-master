@@ -36,7 +36,7 @@ class SolicitudService {
 
     const where: Record<string, unknown> = query.estado 
       ? { estado: query.estado } 
-      : {};
+      : { estado: { not: 'PENDIENTE' } };
 
     const [solicitudes, total] = await Promise.all([
       prisma.solicitud.findMany({
