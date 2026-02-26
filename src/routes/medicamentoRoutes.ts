@@ -147,7 +147,12 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
  *       200:
  *         description: Medicamento actualizado
  *   delete:
- *     summary: Eliminar medicamento
+ *     summary: Desactivar medicamento (soft delete)
+ *     description: |
+ *       No elimina físicamente el medicamento de la base de datos.
+ *       Cambia el estado a INACTIVO para mantener la trazabilidad con lotes, inventario y donaciones asociadas.
+ *       Si el medicamento ya está INACTIVO, retorna un error 400.
+ *       Para reactivar un medicamento, usar el endpoint PUT cambiando el estado a ACTIVO.
  *     tags: [Admin - Medicamentos]
  *     security:
  *       - bearerAuth: []
@@ -159,7 +164,24 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
  *           type: string
  *     responses:
  *       200:
- *         description: Medicamento eliminado
+ *         description: Medicamento desactivado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Medicamento'
+ *                 message:
+ *                   type: string
+ *                   example: "Medicamento desactivado exitosamente"
+ *       400:
+ *         description: El medicamento ya se encuentra desactivado
+ *       404:
+ *         description: Medicamento no encontrado
  */
 router.get('/medicamentos/:codigo', medicamentoController.getMedicamentoById);
 router.put('/medicamentos/:codigo', medicamentoController.updateMedicamento);

@@ -16,12 +16,12 @@ class MedicamentoService {
 
     const where = query.search
       ? {
-          OR: [
-            { nombre: { contains: query.search, mode: 'insensitive' as const } },
-            { codigomedicamento: { contains: query.search, mode: 'insensitive' as const } },
-            { compuesto_principal: { contains: query.search, mode: 'insensitive' as const } },
-          ],
-        }
+        OR: [
+          { nombre: { contains: query.search, mode: 'insensitive' as const } },
+          { codigomedicamento: { contains: query.search, mode: 'insensitive' as const } },
+          { compuesto_principal: { contains: query.search, mode: 'insensitive' as const } },
+        ],
+      }
       : undefined;
 
     const [medicamentos, total] = await Promise.all([
@@ -102,13 +102,13 @@ class MedicamentoService {
         actualizado_en: new Date(),
         categoria_medicamento: categorias?.length
           ? {
-              create: categorias.map((idcategoria) => ({ idcategoria })),
-            }
+            create: categorias.map((idcategoria) => ({ idcategoria })),
+          }
           : undefined,
         enfermedad_medicamento: enfermedades?.length
           ? {
-              create: enfermedades.map((idenfermedad) => ({ idenfermedad })),
-            }
+            create: enfermedades.map((idenfermedad) => ({ idenfermedad })),
+          }
           : undefined,
       },
       include: {
@@ -169,12 +169,37 @@ class MedicamentoService {
   }
 
   async deleteMedicamento(codigomedicamento: string) {
-    // Eliminar relaciones primero
-    await prisma.categoria_medicamento.deleteMany({ where: { codigomedicamento } });
-    await prisma.enfermedad_medicamento.deleteMany({ where: { codigomedicamento } });
-
-    return await prisma.medicamento.delete({
+    // Verificar que el medicamento existe
+    const medicamento = await prisma.medicamento.findUnique({
       where: { codigomedicamento },
+    });
+
+    if (!medicamento) {
+      const error: AppError = new Error('Medicamento no encontrado');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Verificar si ya está inactivo
+    if (medicamento.estado === 'INACTIVO') {
+      const error: AppError = new Error('Este medicamento ya se encuentra desactivado');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Soft delete: cambiar estado a INACTIVO para mantener trazabilidad
+    return await prisma.medicamento.update({
+      where: { codigomedicamento },
+      data: {
+        estado: 'INACTIVO',
+        actualizado_en: new Date(),
+      },
+      include: {
+        via_administracion: true,
+        forma_farmaceutica: true,
+        categoria_medicamento: { include: { categoria: true } },
+        enfermedad_medicamento: { include: { enfermedad: true } },
+      },
     });
   }
 
@@ -243,7 +268,7 @@ class MedicamentoService {
   async getConsolidatedStock() {
     const inventario = await this.getInventario({});
     const stockByMedicamento: Record<string, { nombre: string; foto_url: string | null; total: number; almacenes: any[] }> = {};
-    
+
     inventario.forEach((item: any) => {
       const codigo = item.codigomedicamento;
       if (!stockByMedicamento[codigo]) {
@@ -272,7 +297,7 @@ class MedicamentoService {
   async getExpiringBatches(days: number = 30) {
     const today = new Date();
     const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
-    
+
     const expiringBatches = await prisma.lote.findMany({
       where: {
         fechavencimiento: {

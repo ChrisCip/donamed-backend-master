@@ -65,8 +65,8 @@ class MedicamentoController {
   async deleteMedicamento(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
     try {
       const codigomedicamento = req.params.codigo || req.params.id!;
-      await medicamentoService.deleteMedicamento(codigomedicamento);
-      res.status(200).json({ success: true, message: 'Medicamento eliminado exitosamente' });
+      const medicamento = await medicamentoService.deleteMedicamento(codigomedicamento);
+      res.status(200).json({ success: true, data: medicamento, message: 'Medicamento desactivado exitosamente' });
     } catch (error) {
       next(error);
     }
