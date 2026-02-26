@@ -1,5 +1,6 @@
 import { Response, NextFunction, Request } from 'express';
 import solicitudService from '../services/solicitudService.js';
+import { sendSolicitudStatusEmail } from '../utils/email.js';
 import type { ApiResponse } from '../types/index.js';
 
 /**
@@ -52,7 +53,28 @@ class SolicitudController {
         observaciones: body.observaciones,
         idalmacen_retiro: body.idalmacen_retiro ?? body.solicitud_de_retiro,
       };
-      const solicitud = await solicitudService.updateSolicitudEstado(numerosolicitud, data);
+      const solicitud = await solicitudService.updateSolicitudEstado(numerosolicitud, data) as any;
+
+      // Enviar notificación por email al paciente (no bloquea la respuesta)
+      const ESTADOS_CON_EMAIL = ['APROBADA', 'RECHAZADA', 'DESPACHADA', 'CANCELADA'];
+      if (ESTADOS_CON_EMAIL.includes(data.estado) && solicitud.usuario?.correo) {
+        const nombreUsuario = solicitud.usuario?.persona?.nombre || 'Usuario';
+        const almacenRetiro = solicitud.almacen_retiro
+          ? `${solicitud.almacen_retiro.nombre}${solicitud.almacen_retiro.ciudad ? ` — ${solicitud.almacen_retiro.ciudad.nombre}` : ''}`
+          : null;
+
+        sendSolicitudStatusEmail({
+          to: solicitud.usuario.correo,
+          nombre: nombreUsuario,
+          numerosolicitud,
+          estado: data.estado,
+          observaciones: solicitud.observaciones,
+          almacenRetiro,
+        }).catch((err) => {
+          console.error('Error enviando email de notificación:', err);
+        });
+      }
+
       res.status(200).json({ success: true, data: solicitud, message: 'Estado de solicitud actualizado exitosamente' });
     } catch (error) {
       next(error);
