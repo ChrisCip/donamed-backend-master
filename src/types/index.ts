@@ -218,6 +218,7 @@ export interface CreateMedicamentoRequest {
   idforma_farmaceutica?: number;
   categorias?: number[];
   enfermedades?: number[];
+  foto_url?: string;
 }
 
 export interface UpdateMedicamentoRequest {
@@ -229,6 +230,7 @@ export interface UpdateMedicamentoRequest {
   estado?: 'ACTIVO' | 'INACTIVO';
   categorias?: number[];
   enfermedades?: number[];
+  foto_url?: string;
 }
 
 // ==========================================================

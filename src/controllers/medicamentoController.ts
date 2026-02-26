@@ -1,5 +1,6 @@
 import { Response, NextFunction, Request } from 'express';
 import medicamentoService from '../services/medicamentoService.js';
+import storageService from '../services/storageService.js';
 import type { ApiResponse } from '../types/index.js';
 
 /**
@@ -72,6 +73,81 @@ class MedicamentoController {
   }
 
   // ==========================================================
+  // FOTO DE MEDICAMENTO
+  // ==========================================================
+
+  async uploadPhoto(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const codigomedicamento = req.params.codigo || req.params.id!;
+
+      // Verificar que el medicamento existe
+      const medicamento = await medicamentoService.getMedicamentoById(codigomedicamento);
+
+      // Verificar que se envió un archivo
+      if (!req.file) {
+        res.status(400).json({ success: false, error: { message: 'No se proporcionó ninguna imagen. Envía un archivo en el campo "foto".' } });
+        return;
+      }
+
+      // Si el medicamento ya tenía foto, eliminar la anterior
+      if (medicamento.foto_url) {
+        try {
+          await storageService.deleteMedicamentoPhoto(medicamento.foto_url);
+        } catch {
+          // Si falla eliminar la anterior, continuar de todos modos
+          console.warn(`No se pudo eliminar la foto anterior: ${medicamento.foto_url}`);
+        }
+      }
+
+      // Subir la nueva foto
+      const fotoPath = await storageService.uploadMedicamentoPhoto(req.file, codigomedicamento);
+
+      // Actualizar la ruta en la base de datos
+      const updated = await medicamentoService.updateMedicamento(codigomedicamento, { foto_url: fotoPath });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          foto_url: fotoPath,
+          foto_url_publica: storageService.getPublicUrl(fotoPath),
+          medicamento: updated,
+        },
+        message: 'Foto subida exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deletePhoto(req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> {
+    try {
+      const codigomedicamento = req.params.codigo || req.params.id!;
+
+      // Verificar que el medicamento existe
+      const medicamento = await medicamentoService.getMedicamentoById(codigomedicamento);
+
+      if (!medicamento.foto_url) {
+        res.status(400).json({ success: false, error: { message: 'Este medicamento no tiene foto asignada.' } });
+        return;
+      }
+
+      // Eliminar de Supabase Storage
+      await storageService.deleteMedicamentoPhoto(medicamento.foto_url);
+
+      // Limpiar el campo en la base de datos
+      const updated = await medicamentoService.updateMedicamento(codigomedicamento, { foto_url: null as any });
+
+      res.status(200).json({
+        success: true,
+        data: updated,
+        message: 'Foto eliminada exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ==========================================================
   // INVENTARIO
   // ==========================================================
 
@@ -114,9 +190,9 @@ class MedicamentoController {
     try {
       const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
       const result = await medicamentoService.getExpiringBatches(days);
-      res.status(200).json({ 
-        success: true, 
-        data: result.data, 
+      res.status(200).json({
+        success: true,
+        data: result.data,
         count: result.count,
         message: `Lotes que vencen en los próximos ${days} días`
       });

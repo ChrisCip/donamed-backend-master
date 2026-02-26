@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import medicamentoController from '../controllers/medicamentoController.js';
+import { medicamentoPhotoUpload } from '../middlewares/uploadMiddleware.js';
 
 const router = Router();
 
@@ -73,8 +74,8 @@ const router = Router();
  *                   type: integer
  *               foto_url:
  *                 type: string
- *                 example: "https://supabase.storage.com/bucket/medicamentos/imagen.jpg"
- *                 description: URL de la imagen del medicamento en Supabase Storage
+ *                 example: "MEDICAMENTOS/med_abc123.jpg"
+ *                 description: Ruta relativa de la imagen en Supabase Storage
  *     responses:
  *       201:
  *         description: Medicamento creado
@@ -140,8 +141,8 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
  *                   type: integer
  *               foto_url:
  *                 type: string
- *                 example: "https://supabase.storage.com/bucket/medicamentos/imagen.jpg"
- *                 description: URL de la imagen del medicamento en Supabase Storage
+ *                 example: "MEDICAMENTOS/med_abc123.jpg"
+ *                 description: Ruta relativa de la imagen en Supabase Storage
  *     responses:
  *       200:
  *         description: Medicamento actualizado
@@ -163,6 +164,88 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
 router.get('/medicamentos/:codigo', medicamentoController.getMedicamentoById);
 router.put('/medicamentos/:codigo', medicamentoController.updateMedicamento);
 router.delete('/medicamentos/:codigo', medicamentoController.deleteMedicamento);
+
+// ==========================================================
+// FOTO DE MEDICAMENTO
+// ==========================================================
+
+/**
+ * @swagger
+ * /api/v1/admin/medicamentos/{codigo}/foto:
+ *   post:
+ *     summary: Subir o reemplazar foto de medicamento
+ *     description: Sube una imagen al bucket de Supabase Storage en la carpeta MEDICAMENTOS. Si el medicamento ya tiene foto, la reemplaza.
+ *     tags: [Admin - Medicamentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: codigo
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código del medicamento
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - foto
+ *             properties:
+ *               foto:
+ *                 type: string
+ *                 format: binary
+ *                 description: "Imagen del medicamento (JPEG, PNG, GIF, WebP). Máximo 5MB."
+ *     responses:
+ *       200:
+ *         description: Foto subida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     foto_url:
+ *                       type: string
+ *                       example: "MEDICAMENTOS/med_MED001_1709912345678.jpg"
+ *                     foto_url_publica:
+ *                       type: string
+ *                       example: "https://xxx.supabase.co/storage/v1/object/public/DONAMED%20BUCKET/MEDICAMENTOS/med_MED001_1709912345678.jpg"
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: No se proporcionó imagen o tipo de archivo no válido
+ *       404:
+ *         description: Medicamento no encontrado
+ *   delete:
+ *     summary: Eliminar foto de medicamento
+ *     description: Elimina la imagen del medicamento de Supabase Storage y limpia el campo foto_url.
+ *     tags: [Admin - Medicamentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: codigo
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código del medicamento
+ *     responses:
+ *       200:
+ *         description: Foto eliminada exitosamente
+ *       400:
+ *         description: El medicamento no tiene foto asignada
+ *       404:
+ *         description: Medicamento no encontrado
+ */
+router.post('/medicamentos/:codigo/foto', medicamentoPhotoUpload, medicamentoController.uploadPhoto);
+router.delete('/medicamentos/:codigo/foto', medicamentoController.deletePhoto);
 
 // ==========================================================
 // INVENTARIO
