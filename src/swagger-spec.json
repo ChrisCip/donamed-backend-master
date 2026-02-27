@@ -1,0 +1,4200 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DONAMED API",
+    "version": "1.0.0",
+    "description": "API para el sistema de gestión de donaciones de medicamentos de alto costo en República Dominicana",
+    "contact": {
+      "name": "Equipo DONAMED",
+      "email": "contacto@donamed.do"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor de Desarrollo"
+    },
+    {
+      "url": "https://api.donamed.do",
+      "description": "Servidor de Producción"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Ingrese el token JWT obtenido al iniciar sesión"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Mensaje de error"
+              }
+            }
+          }
+        }
+      },
+      "Perfil": {
+        "type": "object",
+        "properties": {
+          "IDUsuario": {
+            "type": "integer",
+            "example": 1
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "example": "mariacon@ejemplo.com"
+          },
+          "cedula_usuario": {
+            "type": "string",
+            "example": "00112345678"
+          },
+          "codigo_rol": {
+            "type": "string",
+            "example": "PACIENTE"
+          },
+          "persona": {
+            "type": "object",
+            "properties": {
+              "Cedula": {
+                "type": "string",
+                "example": "00112345678"
+              },
+              "nombre": {
+                "type": "string",
+                "example": "María"
+              },
+              "apellidos": {
+                "type": "string",
+                "example": "Concepción"
+              },
+              "sexo": {
+                "type": "string",
+                "enum": [
+                  "M",
+                  "F"
+                ],
+                "example": "F"
+              },
+              "fecha_nacimiento": {
+                "type": "string",
+                "format": "date",
+                "example": "1990-01-15"
+              },
+              "telefono": {
+                "type": "string",
+                "example": "809-693-8956"
+              },
+              "direccion": {
+                "type": "string",
+                "example": "Calle Principal #123"
+              }
+            }
+          },
+          "rol": {
+            "type": "object",
+            "properties": {
+              "CodigoRol": {
+                "type": "string",
+                "example": "PACIENTE"
+              },
+              "nombre": {
+                "type": "string",
+                "example": "Paciente"
+              }
+            }
+          }
+        }
+      },
+      "ActualizarPerfil": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "example": "María"
+          },
+          "apellidos": {
+            "type": "string",
+            "example": "Concepción"
+          },
+          "telefono": {
+            "type": "string",
+            "example": "809-555-1234"
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "example": "marianueva@ejemplo.com"
+          },
+          "direccion": {
+            "type": "string",
+            "example": "Nueva dirección"
+          },
+          "CodigoCiudad": {
+            "type": "integer",
+            "example": 2
+          }
+        }
+      },
+      "Solicitud": {
+        "type": "object",
+        "properties": {
+          "NumeroSolicitud": {
+            "type": "integer",
+            "example": 1
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "EN_REVISION",
+              "APROBADA",
+              "RECHAZADA",
+              "DESPACHADA",
+              "CANCELADA",
+              "INCOMPLETA"
+            ],
+            "example": "PENDIENTE"
+          },
+          "creada_en": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-03-12T10:30:00Z"
+          },
+          "patologia": {
+            "type": "string",
+            "example": "Diabetes Tipo 1"
+          }
+        }
+      },
+      "Medicamento": {
+        "type": "object",
+        "properties": {
+          "codigomedicamento": {
+            "type": "string",
+            "example": "MED-001"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Ibuprofeno 400mg"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "compuesto_principal": {
+            "type": "string",
+            "example": "Ibuprofeno"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ACTIVO",
+              "INACTIVO"
+            ],
+            "example": "ACTIVO"
+          },
+          "foto_url": {
+            "type": "string",
+            "nullable": true,
+            "example": "MEDICAMENTOS/med_MED001_1709912345678.jpg"
+          },
+          "CodigoMedicamento": {
+            "type": "string"
+          }
+        }
+      },
+      "Provincia": {
+        "type": "object",
+        "properties": {
+          "CodigoProvincia": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "Ciudad": {
+        "type": "object",
+        "properties": {
+          "CodigoCiudad": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "CodigoProvincia": {
+            "type": "string"
+          }
+        }
+      },
+      "Rol": {
+        "type": "object",
+        "properties": {
+          "CodigoRol": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "IDCategoria": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "Almacen": {
+        "type": "object",
+        "properties": {
+          "IDAlmacen": {
+            "type": "integer"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "direccion": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ACTIVO",
+              "INACTIVO"
+            ]
+          }
+        }
+      },
+      "Proveedor": {
+        "type": "object",
+        "properties": {
+          "RNCProveedor": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          }
+        }
+      },
+      "Donacion": {
+        "type": "object",
+        "properties": {
+          "NumeroDonacion": {
+            "type": "integer"
+          },
+          "fecha_recibida": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "descripcion": {
+            "type": "string"
+          }
+        }
+      },
+      "DashboardStats": {
+        "type": "object",
+        "properties": {
+          "totalMedicamentos": {
+            "type": "integer"
+          },
+          "totalAlmacenes": {
+            "type": "integer"
+          },
+          "solicitudesPendientes": {
+            "type": "integer"
+          },
+          "medicamentosProximosVencer": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/admin/almacenes": {
+      "get": {
+        "summary": "Listar almacenes",
+        "tags": [
+          "Admin - Almacenes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de almacenes"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear almacén",
+        "tags": [
+          "Admin - Almacenes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre",
+                  "telefono",
+                  "correo"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "codigociudad": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Almacén creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/almacenes/{id}": {
+      "get": {
+        "summary": "Obtener almacén por ID",
+        "tags": [
+          "Admin - Almacenes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Almacén encontrado"
+          },
+          "404": {
+            "description": "Almacén no encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar almacén",
+        "tags": [
+          "Admin - Almacenes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "codigociudad": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string"
+                  },
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVO",
+                      "INACTIVO"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Almacén actualizado"
+          },
+          "404": {
+            "description": "Almacén no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar almacén",
+        "tags": [
+          "Admin - Almacenes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Almacén eliminado"
+          },
+          "404": {
+            "description": "Almacén no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth/login": {
+      "post": {
+        "summary": "Inicio de sesión de administrador",
+        "tags": [
+          "Admin - Autenticación"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "correo",
+                  "contrasena"
+                ],
+                "properties": {
+                  "correo": {
+                    "type": "string",
+                    "example": "admin@donamed.com"
+                  },
+                  "contrasena": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso. Retorna JWT + Info de Usuario."
+          },
+          "401": {
+            "description": "Credenciales inválidas"
+          },
+          "403": {
+            "description": "Acceso denegado (no es administrador)"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth/refresh": {
+      "post": {
+        "summary": "Refrescar token expirado",
+        "tags": [
+          "Admin - Autenticación"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token refrescado exitosamente"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth/me": {
+      "get": {
+        "summary": "Obtener perfil del administrador logueado",
+        "tags": [
+          "Admin - Autenticación"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil del administrador"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles": {
+      "get": {
+        "summary": "Listar todos los roles",
+        "tags": [
+          "Admin - Roles"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de roles"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear un rol",
+        "tags": [
+          "Admin - Roles"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rol creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles/{id}": {
+      "put": {
+        "summary": "Actualizar rol",
+        "tags": [
+          "Admin - Roles"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rol actualizado"
+          },
+          "404": {
+            "description": "Rol no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar rol",
+        "tags": [
+          "Admin - Roles"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rol eliminado"
+          },
+          "404": {
+            "description": "Rol no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tipos-solicitud": {
+      "get": {
+        "summary": "Listar tipos de solicitud",
+        "tags": [
+          "Admin - Tipos de Solicitud"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de tipos de solicitud"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear tipo de solicitud",
+        "tags": [
+          "Admin - Tipos de Solicitud"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigotiposolicitud",
+                  "descripcion"
+                ],
+                "properties": {
+                  "codigotiposolicitud": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tipo de solicitud creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tipos-solicitud/{id}": {
+      "put": {
+        "summary": "Actualizar tipo de solicitud",
+        "tags": [
+          "Admin - Tipos de Solicitud"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "descripcion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tipo de solicitud actualizado"
+          },
+          "404": {
+            "description": "Tipo no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar tipo de solicitud",
+        "tags": [
+          "Admin - Tipos de Solicitud"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tipo de solicitud eliminado"
+          },
+          "404": {
+            "description": "Tipo no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/categorias": {
+      "get": {
+        "summary": "Listar categorías de medicamentos",
+        "tags": [
+          "Admin - Categorías"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de categorías"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear categoría",
+        "tags": [
+          "Admin - Categorías"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoría creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/categorias/{id}": {
+      "put": {
+        "summary": "Actualizar categoría",
+        "tags": [
+          "Admin - Categorías"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categoría actualizada"
+          },
+          "404": {
+            "description": "Categoría no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar categoría",
+        "tags": [
+          "Admin - Categorías"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categoría eliminada"
+          },
+          "404": {
+            "description": "Categoría no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "summary": "Obtener todos los datos del dashboard admin",
+        "description": "Retorna cards, gráficos y tabla de solicitudes recientes",
+        "tags": [
+          "Admin - Dashboard"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del dashboard obtenidos exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "cards": {
+                          "type": "object",
+                          "properties": {
+                            "totalDonaciones": {
+                              "type": "integer"
+                            },
+                            "solicitudes": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "variacion": {
+                                  "type": "number"
+                                }
+                              }
+                            },
+                            "aprobaciones": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "variacion": {
+                                  "type": "number"
+                                }
+                              }
+                            },
+                            "nuevosRegistros": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "variacion": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "solicitudesVsMedicamentos": {
+                          "type": "object",
+                          "properties": {
+                            "solicitudes": {
+                              "type": "integer"
+                            },
+                            "medicamentos": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "solicitudesRecientes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "numero": {
+                                "type": "integer"
+                              },
+                              "numeroSolicitud": {
+                                "type": "string"
+                              },
+                              "fecha": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "nombreSolicitante": {
+                                "type": "string"
+                              },
+                              "estado": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "solicitudesEntrantes": {
+                          "type": "object",
+                          "properties": {
+                            "esteMes": {
+                              "type": "integer"
+                            },
+                            "mesAnterior": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "insights": {
+                          "type": "object",
+                          "properties": {
+                            "donaciones": {
+                              "type": "array"
+                            },
+                            "usuarios": {
+                              "type": "array"
+                            },
+                            "solicitudes": {
+                              "type": "array"
+                            }
+                          }
+                        },
+                        "solicitudesPorDia": {
+                          "type": "array"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/despachos": {
+      "get": {
+        "summary": "Listar todos los despachos",
+        "description": "Obtiene la lista de despachos con paginación y filtros opcionales",
+        "tags": [
+          "Admin - Despachos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Número de página"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "description": "Cantidad de registros por página"
+          },
+          {
+            "in": "query",
+            "name": "solicitud",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filtrar por número de solicitud"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de despachos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear un nuevo despacho completo",
+        "description": "Crea un despacho para una solicitud aprobada. Valida stock, descuenta del inventario\ny actualiza el stock global de cada medicamento. Se puede usar de dos formas:\n1. Con detalles previos asignados (via PATCH /solicitudes/:id/detalles) - solo enviar solicitud + cedula_recibe\n2. Con detalles inline - enviar el array de detalles junto con la solicitud\n",
+        "tags": [
+          "Admin - Despachos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "solicitud",
+                  "cedula_recibe"
+                ],
+                "properties": {
+                  "solicitud": {
+                    "type": "integer",
+                    "description": "Número de la solicitud a despachar"
+                  },
+                  "cedula_recibe": {
+                    "type": "string",
+                    "description": "Cédula de quien recibe (11 dígitos)",
+                    "example": "00112233445"
+                  },
+                  "detalles": {
+                    "type": "array",
+                    "description": "Medicamentos a despachar (opcional si ya fueron asignados previamente)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "idalmacen",
+                        "codigolote",
+                        "cantidad",
+                        "dosis_indicada",
+                        "tiempo_tratamiento"
+                      ],
+                      "properties": {
+                        "idalmacen": {
+                          "type": "integer",
+                          "description": "ID del almacén de donde se despacha"
+                        },
+                        "codigolote": {
+                          "type": "string",
+                          "description": "Código del lote a despachar"
+                        },
+                        "cantidad": {
+                          "type": "integer",
+                          "description": "Cantidad a despachar"
+                        },
+                        "dosis_indicada": {
+                          "type": "string",
+                          "description": "Dosis indicada por el médico"
+                        },
+                        "tiempo_tratamiento": {
+                          "type": "string",
+                          "description": "Duración del tratamiento"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Despacho creado exitosamente con detalle de lo despachado"
+          },
+          "400": {
+            "description": "Solicitud no aprobada, stock insuficiente, cédula inválida o sin detalles"
+          },
+          "404": {
+            "description": "Solicitud o persona no encontrada"
+          },
+          "409": {
+            "description": "Ya existe un despacho para esta solicitud"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/despachos/{id}": {
+      "get": {
+        "summary": "Obtener detalle de un despacho",
+        "tags": [
+          "Admin - Despachos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de despacho"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle del despacho"
+          },
+          "404": {
+            "description": "Despacho no encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar un despacho",
+        "tags": [
+          "Admin - Despachos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de despacho"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cedula_recibe": {
+                    "type": "string",
+                    "description": "Nueva cédula de quien recibe (11 dígitos)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Despacho actualizado"
+          },
+          "404": {
+            "description": "Despacho no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar un despacho",
+        "description": "Elimina el despacho, revierte el inventario descontado y cambia el estado de la solicitud a APROBADA",
+        "tags": [
+          "Admin - Despachos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de despacho"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Despacho eliminado"
+          },
+          "404": {
+            "description": "Despacho no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/donaciones": {
+      "get": {
+        "summary": "Listar donaciones",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "proveedor",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por RNC del proveedor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de donaciones"
+          }
+        }
+      },
+      "post": {
+        "summary": "Registrar donación",
+        "description": "Registra una donación con sus medicamentos. Si se proporcionan medicamentos, se actualiza el inventario automáticamente.",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "proveedor": {
+                    "type": "string",
+                    "description": "RNC del proveedor (9 dígitos) o cédula (11 dígitos)"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "medicamentos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "idalmacen",
+                        "codigolote",
+                        "cantidad"
+                      ],
+                      "properties": {
+                        "idalmacen": {
+                          "type": "integer"
+                        },
+                        "codigolote": {
+                          "type": "string"
+                        },
+                        "cantidad": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Donación registrada"
+          },
+          "400": {
+            "description": "RNC/Cédula inválido o lote/almacén no existe"
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/donaciones/{id}": {
+      "get": {
+        "summary": "Obtener detalle de donación",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la donación"
+          },
+          "404": {
+            "description": "Donación no encontrada"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar donación",
+        "description": "Actualiza la descripción o proveedor de una donación existente",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "proveedor": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Donación actualizada"
+          },
+          "404": {
+            "description": "Donación no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar donación",
+        "description": "Elimina la donación y revierte el inventario",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Donación eliminada"
+          },
+          "404": {
+            "description": "Donación no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/donaciones/{id}/medicamentos": {
+      "post": {
+        "summary": "Agregar medicamentos a una donación existente",
+        "tags": [
+          "Admin - Donaciones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "medicamentos"
+                ],
+                "properties": {
+                  "medicamentos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "idalmacen",
+                        "codigolote",
+                        "cantidad"
+                      ],
+                      "properties": {
+                        "idalmacen": {
+                          "type": "integer"
+                        },
+                        "codigolote": {
+                          "type": "string"
+                        },
+                        "cantidad": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Medicamentos agregados"
+          },
+          "404": {
+            "description": "Donación no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/enfermedades": {
+      "get": {
+        "summary": "Listar enfermedades",
+        "tags": [
+          "Admin - Enfermedades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de enfermedades"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear enfermedad",
+        "tags": [
+          "Admin - Enfermedades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Enfermedad creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/enfermedades/{id}": {
+      "put": {
+        "summary": "Actualizar enfermedad",
+        "tags": [
+          "Admin - Enfermedades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Enfermedad actualizada"
+          },
+          "404": {
+            "description": "Enfermedad no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar enfermedad",
+        "tags": [
+          "Admin - Enfermedades"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enfermedad eliminada"
+          },
+          "404": {
+            "description": "Enfermedad no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/formas-farmaceuticas": {
+      "get": {
+        "summary": "Listar formas farmacéuticas",
+        "tags": [
+          "Admin - Formas Farmacéuticas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de formas farmacéuticas"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear forma farmacéutica",
+        "tags": [
+          "Admin - Formas Farmacéuticas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Forma farmacéutica creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/formas-farmaceuticas/{id}": {
+      "put": {
+        "summary": "Actualizar forma farmacéutica",
+        "tags": [
+          "Admin - Formas Farmacéuticas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Forma farmacéutica actualizada"
+          },
+          "404": {
+            "description": "Forma no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar forma farmacéutica",
+        "tags": [
+          "Admin - Formas Farmacéuticas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forma farmacéutica eliminada"
+          },
+          "404": {
+            "description": "Forma no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/lotes": {
+      "get": {
+        "summary": "Listar lotes",
+        "tags": [
+          "Admin - Lotes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "medicamento",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por código de medicamento"
+          },
+          {
+            "in": "query",
+            "name": "vencidos",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "true=vencidos, false=vigentes"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Página"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Elementos por página"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de lotes"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear lote",
+        "tags": [
+          "Admin - Lotes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigolote",
+                  "codigomedicamento",
+                  "fechavencimiento",
+                  "fechafabricacion"
+                ],
+                "properties": {
+                  "codigolote": {
+                    "type": "string",
+                    "example": "L-2026-003"
+                  },
+                  "codigomedicamento": {
+                    "type": "string",
+                    "example": "MED-001"
+                  },
+                  "fechavencimiento": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2027-12-31"
+                  },
+                  "fechafabricacion": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-15"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lote creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/lotes/{id}": {
+      "delete": {
+        "summary": "Eliminar lote",
+        "tags": [
+          "Admin - Lotes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Código del lote"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lote eliminado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/medicamentos": {
+      "get": {
+        "summary": "Listar medicamentos con paginación",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Buscar por nombre, código o compuesto"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de medicamentos paginada"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear medicamento",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "CodigoMedicamento",
+                  "nombre"
+                ],
+                "properties": {
+                  "CodigoMedicamento": {
+                    "type": "string",
+                    "example": "MED-001"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "example": "Ibuprofeno 400mg"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "compuesto_principal": {
+                    "type": "string"
+                  },
+                  "IDVia": {
+                    "type": "integer"
+                  },
+                  "IDForma_Farmaceutica": {
+                    "type": "integer"
+                  },
+                  "categorias": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "enfermedades": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "foto_url": {
+                    "type": "string",
+                    "example": "MEDICAMENTOS/med_abc123.jpg",
+                    "description": "Ruta relativa de la imagen en Supabase Storage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Medicamento creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/medicamentos/{codigo}": {
+      "get": {
+        "summary": "Obtener detalle de medicamento",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle del medicamento"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar medicamento",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "descripcion": {
+                    "type": "string"
+                  },
+                  "compuesto_principal": {
+                    "type": "string"
+                  },
+                  "idvia_administracion": {
+                    "type": "integer"
+                  },
+                  "idforma_farmaceutica": {
+                    "type": "integer"
+                  },
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVO",
+                      "INACTIVO"
+                    ]
+                  },
+                  "categorias": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "enfermedades": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "foto_url": {
+                    "type": "string",
+                    "example": "MEDICAMENTOS/med_abc123.jpg",
+                    "description": "Ruta relativa de la imagen en Supabase Storage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Medicamento actualizado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Desactivar medicamento (soft delete)",
+        "description": "No elimina físicamente el medicamento de la base de datos.\nCambia el estado a INACTIVO para mantener la trazabilidad con lotes, inventario y donaciones asociadas.\nSi el medicamento ya está INACTIVO, retorna un error 400.\nPara reactivar un medicamento, usar el endpoint PUT cambiando el estado a ACTIVO.\n",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Medicamento desactivado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Medicamento"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Medicamento desactivado exitosamente"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El medicamento ya se encuentra desactivado"
+          },
+          "404": {
+            "description": "Medicamento no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/medicamentos/{codigo}/foto": {
+      "post": {
+        "summary": "Subir o reemplazar foto de medicamento",
+        "description": "Sube una imagen al bucket de Supabase Storage en la carpeta MEDICAMENTOS. Si el medicamento ya tiene foto, la reemplaza.",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Código del medicamento"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "foto"
+                ],
+                "properties": {
+                  "foto": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Imagen del medicamento (JPEG, PNG, GIF, WebP). Máximo 5MB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Foto subida exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "foto_url": {
+                          "type": "string",
+                          "example": "MEDICAMENTOS/med_MED001_1709912345678.jpg"
+                        },
+                        "foto_url_publica": {
+                          "type": "string",
+                          "example": "https://xxx.supabase.co/storage/v1/object/public/DONAMED%20BUCKET/MEDICAMENTOS/med_MED001_1709912345678.jpg"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No se proporcionó imagen o tipo de archivo no válido"
+          },
+          "404": {
+            "description": "Medicamento no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar foto de medicamento",
+        "description": "Elimina la imagen del medicamento de Supabase Storage y limpia el campo foto_url.",
+        "tags": [
+          "Admin - Medicamentos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Código del medicamento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Foto eliminada exitosamente"
+          },
+          "400": {
+            "description": "El medicamento no tiene foto asignada"
+          },
+          "404": {
+            "description": "Medicamento no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/inventario": {
+      "get": {
+        "summary": "Ver inventario",
+        "tags": [
+          "Admin - Almacenes e Inventario"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "almacen",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filtrar por almacén"
+          },
+          {
+            "in": "query",
+            "name": "medicamento",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por medicamento"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de inventario"
+          }
+        }
+      },
+      "post": {
+        "summary": "Ajustar inventario",
+        "tags": [
+          "Admin - Almacenes e Inventario"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "idalmacen",
+                  "codigolote",
+                  "codigomedicamento",
+                  "cantidad"
+                ],
+                "properties": {
+                  "idalmacen": {
+                    "type": "integer"
+                  },
+                  "codigolote": {
+                    "type": "string"
+                  },
+                  "codigomedicamento": {
+                    "type": "string"
+                  },
+                  "cantidad": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inventario ajustado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/inventory/stock": {
+      "get": {
+        "summary": "Vista consolidada de stock",
+        "tags": [
+          "Admin - Almacenes e Inventario"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stock consolidado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/medicamentos-solicitados": {
+      "get": {
+        "summary": "Listar medicamentos solicitados (requiere filtro)",
+        "description": "Obtiene la lista de medicamentos solicitados por pacientes.\nREQUIERE al menos un filtro (numerosolicitud o nombre).\nNo devuelve nombre de paciente, fecha ni hora por diseño.\n",
+        "tags": [
+          "Admin - Medicamentos Solicitados"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "numerosolicitud",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filtrar por número de solicitud"
+          },
+          {
+            "in": "query",
+            "name": "nombre",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Buscar por nombre del medicamento"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de medicamentos solicitados"
+          },
+          "400": {
+            "description": "Debe especificar un filtro"
+          }
+        }
+      },
+      "post": {
+        "summary": "Agregar medicamento(s) solicitado(s) a una solicitud",
+        "description": "Agrega uno o varios medicamentos (texto libre) a una solicitud.\nPuede enviar un solo medicamento con `nombre` y `dosis`, \no múltiples con el array `medicamentos`.\nSolo funciona si la solicitud está en estado PENDIENTE, EN_REVISION o INCOMPLETA.\n",
+        "tags": [
+          "Admin - Medicamentos Solicitados"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "numerosolicitud"
+                ],
+                "properties": {
+                  "numerosolicitud": {
+                    "type": "integer",
+                    "description": "Número de la solicitud"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "description": "Nombre del medicamento (para agregar uno solo)",
+                    "example": "Adalimumab 40mg"
+                  },
+                  "dosis": {
+                    "type": "string",
+                    "description": "Dosis indicada (para agregar uno solo)",
+                    "example": "1 vez por semana"
+                  },
+                  "medicamentos": {
+                    "type": "array",
+                    "description": "Array de medicamentos (para agregar múltiples)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "nombre"
+                      ],
+                      "properties": {
+                        "nombre": {
+                          "type": "string"
+                        },
+                        "dosis": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Medicamento(s) agregado(s) exitosamente"
+          },
+          "400": {
+            "description": "Estado de solicitud no permite agregar medicamentos"
+          },
+          "404": {
+            "description": "Solicitud no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/medicamentos-solicitados/{id}": {
+      "get": {
+        "summary": "Obtener detalle de un medicamento solicitado",
+        "tags": [
+          "Admin - Medicamentos Solicitados"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle del medicamento solicitado"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar medicamento solicitado",
+        "tags": [
+          "Admin - Medicamentos Solicitados"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "dosis": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Medicamento actualizado"
+          },
+          "400": {
+            "description": "Estado de solicitud no permite modificaciones"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar medicamento solicitado",
+        "tags": [
+          "Admin - Medicamentos Solicitados"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Medicamento eliminado"
+          },
+          "400": {
+            "description": "Estado de solicitud no permite eliminaciones"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/solicitudes/{numerosolicitud}/medicamentos-solicitados": {
+      "get": {
+        "summary": "Obtener medicamentos solicitados de una solicitud",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "numerosolicitud",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de medicamentos solicitados"
+          },
+          "404": {
+            "description": "Solicitud no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/usuarios": {
+      "get": {
+        "summary": "Listar usuarios",
+        "tags": [
+          "Admin - Usuarios"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de usuarios"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear usuario",
+        "tags": [
+          "Admin - Usuarios"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "correo",
+                  "contrasena"
+                ],
+                "properties": {
+                  "correo": {
+                    "type": "string"
+                  },
+                  "contrasena": {
+                    "type": "string"
+                  },
+                  "cedula_usuario": {
+                    "type": "string"
+                  },
+                  "codigo_rol": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario creado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/personas": {
+      "get": {
+        "summary": "Listar personas",
+        "tags": [
+          "Admin - Usuarios"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de personas"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear persona",
+        "tags": [
+          "Admin - Usuarios"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cedula",
+                  "nombre",
+                  "apellidos"
+                ],
+                "properties": {
+                  "cedula": {
+                    "type": "string"
+                  },
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "apellidos": {
+                    "type": "string"
+                  },
+                  "sexo": {
+                    "type": "string",
+                    "enum": [
+                      "M",
+                      "F"
+                    ]
+                  },
+                  "fecha_nacimiento": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "codigociudad": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Persona creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/proveedores": {
+      "get": {
+        "summary": "Listar todos los proveedores",
+        "description": "Obtiene la lista de proveedores con paginación y búsqueda",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Número de página"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "description": "Cantidad de registros por página"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Buscar por nombre o RNC"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de proveedores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Proveedor"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear un nuevo proveedor",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rncproveedor",
+                  "nombre"
+                ],
+                "properties": {
+                  "rncproveedor": {
+                    "type": "string",
+                    "description": "RNC (9 dígitos) o cédula (11 dígitos)",
+                    "example": "123456789"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "description": "Nombre del proveedor"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string"
+                  },
+                  "codigociudad": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proveedor creado exitosamente"
+          },
+          "400": {
+            "description": "RNC inválido"
+          },
+          "409": {
+            "description": "Ya existe un proveedor con este RNC"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/proveedores/{id}": {
+      "get": {
+        "summary": "Obtener detalle de un proveedor",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "RNC del proveedor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle del proveedor con historial de donaciones"
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar un proveedor",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "RNC del proveedor"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "telefono": {
+                    "type": "string"
+                  },
+                  "correo": {
+                    "type": "string"
+                  },
+                  "codigociudad": {
+                    "type": "string"
+                  },
+                  "direccion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proveedor actualizado"
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar un proveedor",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "RNC del proveedor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proveedor eliminado"
+          },
+          "400": {
+            "description": "No se puede eliminar (tiene donaciones asociadas)"
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/proveedores/{id}/stats": {
+      "get": {
+        "summary": "Obtener estadísticas de un proveedor",
+        "tags": [
+          "Admin - Proveedores"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "RNC del proveedor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estadísticas del proveedor"
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/solicitudes": {
+      "get": {
+        "summary": "Listar solicitudes (excluye PENDIENTE por defecto)",
+        "description": "Solo muestra solicitudes enviadas (EN_REVISION o posterior). Las solicitudes en PENDIENTE son borradores del usuario.",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EN_REVISION",
+                "APROBADA",
+                "RECHAZADA",
+                "DESPACHADA",
+                "CANCELADA",
+                "INCOMPLETA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de solicitudes"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear una nueva solicitud",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idusuario": {
+                    "type": "integer"
+                  },
+                  "cedularepresentante": {
+                    "type": "string",
+                    "description": "Debe tener 11 dígitos"
+                  },
+                  "codigotiposolicitud": {
+                    "type": "string"
+                  },
+                  "numeroafiliado": {
+                    "type": "string"
+                  },
+                  "centromedico": {
+                    "type": "string"
+                  },
+                  "relacion_solicitante": {
+                    "type": "string"
+                  },
+                  "patologia": {
+                    "type": "string"
+                  },
+                  "documentos": {
+                    "type": "object",
+                    "description": "URLs de documentos del paciente en Supabase Storage",
+                    "example": {
+                      "cedula": "https://proyecto.supabase.co/storage/v1/object/public/documentos/cedula.pdf",
+                      "receta": "https://proyecto.supabase.co/storage/v1/object/public/documentos/receta.pdf"
+                    }
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  },
+                  "medicamentos_solicitados": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "nombre": {
+                          "type": "string"
+                        },
+                        "dosis": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitud creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/solicitudes/{id}": {
+      "get": {
+        "summary": "Obtener detalle de solicitud",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de solicitud"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/solicitudes/{id}/estado": {
+      "patch": {
+        "summary": "Cambiar estado de solicitud",
+        "description": "Transiciones válidas:\n- PENDIENTE → EN_REVISION, CANCELADA\n- EN_REVISION → APROBADA, RECHAZADA, INCOMPLETA, CANCELADA\n- INCOMPLETA → EN_REVISION, CANCELADA\n- APROBADA → DESPACHADA, CANCELADA\n- RECHAZADA → EN_REVISION\n- DESPACHADA → (estado final)\n- CANCELADA → (estado final)\n",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "estado"
+                ],
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "enum": [
+                      "PENDIENTE",
+                      "EN_REVISION",
+                      "APROBADA",
+                      "RECHAZADA",
+                      "DESPACHADA",
+                      "CANCELADA",
+                      "INCOMPLETA"
+                    ]
+                  },
+                  "observaciones": {
+                    "type": "string"
+                  },
+                  "idalmacen_retiro": {
+                    "type": "integer",
+                    "description": "Obligatorio al aprobar. ID del almacén donde el cliente retirará (también acepta solicitud_de_retiro)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado actualizado"
+          },
+          "400": {
+            "description": "Transición de estado inválida"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/solicitudes/{id}/detalles": {
+      "get": {
+        "summary": "Obtener detalles asignados a una solicitud",
+        "description": "Devuelve los medicamentos reales (lotes, almacenes, cantidades) asignados a la solicitud",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de solicitud"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de detalles con info de lote, medicamento y almacén"
+          },
+          "404": {
+            "description": "Solicitud no encontrada"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Asignar medicamentos reales a una solicitud",
+        "description": "Permite al admin asignar medicamentos reales (de lotes/almacenes específicos) a una solicitud EN_REVISION.\nValida que los lotes y almacenes existan y que haya stock suficiente.\nReemplaza los detalles previos si los hubiera.\n",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de solicitud"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "detalles"
+                ],
+                "properties": {
+                  "detalles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "idalmacen",
+                        "codigolote",
+                        "cantidad",
+                        "dosis_indicada",
+                        "tiempo_tratamiento"
+                      ],
+                      "properties": {
+                        "idalmacen": {
+                          "type": "integer",
+                          "description": "ID del almacén"
+                        },
+                        "codigolote": {
+                          "type": "string",
+                          "description": "Código del lote"
+                        },
+                        "cantidad": {
+                          "type": "integer",
+                          "description": "Cantidad a asignar"
+                        },
+                        "dosis_indicada": {
+                          "type": "string",
+                          "description": "Dosis indicada por el médico"
+                        },
+                        "tiempo_tratamiento": {
+                          "type": "string",
+                          "description": "Duración del tratamiento"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Medicamentos asignados exitosamente"
+          },
+          "400": {
+            "description": "Solicitud no está EN_REVISION, stock insuficiente, lote/almacén no encontrado"
+          },
+          "404": {
+            "description": "Solicitud no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar todos los detalles de una solicitud",
+        "description": "Elimina todos los medicamentos asignados. No se permite en solicitudes DESPACHADA.",
+        "tags": [
+          "Admin - Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Número de solicitud"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles eliminados exitosamente"
+          },
+          "400": {
+            "description": "No se pueden eliminar detalles de solicitud despachada"
+          },
+          "404": {
+            "description": "Solicitud no encontrada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/provincias": {
+      "get": {
+        "summary": "Listar todas las provincias",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de provincias"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear una provincia",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigoprovincia",
+                  "nombre"
+                ],
+                "properties": {
+                  "codigoprovincia": {
+                    "type": "string",
+                    "example": "VAL"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "example": "Valverde"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Provincia creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/provincias/{id}": {
+      "put": {
+        "summary": "Actualizar una provincia",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Provincia actualizada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar una provincia",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Provincia eliminada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/ciudades": {
+      "get": {
+        "summary": "Listar ciudades",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "provinciaId",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filtrar por provincia"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de ciudades"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear una ciudad",
+        "tags": [
+          "Admin - Geografía"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "codigociudad",
+                  "nombre",
+                  "codigoprovincia"
+                ],
+                "properties": {
+                  "codigociudad": {
+                    "type": "string",
+                    "example": "MAO"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "example": "Mao"
+                  },
+                  "codigoprovincia": {
+                    "type": "string",
+                    "example": "VAL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ciudad creada"
+          }
+        }
+      }
+    },
+    "/api/v1/perfil": {
+      "get": {
+        "summary": "Obtener perfil del usuario autenticado",
+        "description": "Retorna la información completa del perfil del usuario, incluyendo datos personales, ciudad, provincia y rol",
+        "tags": [
+          "Perfil de Usuario"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Perfil"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado - Token inválido o faltante",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar información del perfil",
+        "description": "Permite actualizar nombre, apellidos, teléfono, correo, dirección y ciudad del usuario autenticado",
+        "tags": [
+          "Perfil de Usuario"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPerfil"
+              },
+              "examples": {
+                "completo": {
+                  "summary": "Actualización completa",
+                  "value": {
+                    "nombre": "María",
+                    "apellidos": "Concepción",
+                    "telefono": "809-555-1234",
+                    "correo": "marianueva@ejemplo.com",
+                    "direccion": "Calle Nueva",
+                    "CodigoCiudad": 2
+                  }
+                },
+                "parcial": {
+                  "summary": "Actualización parcial (solo teléfono)",
+                  "value": {
+                    "telefono": "809-555-9999"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Perfil actualizado exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Perfil"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto - El correo ya está en uso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solicitudes": {
+      "get": {
+        "summary": "Obtener historial de solicitudes",
+        "description": "Retorna todas las solicitudes realizadas por el usuario autenticado, ordenadas por fecha (más recientes primero)",
+        "tags": [
+          "Solicitudes"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historial obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "count": {
+                      "type": "integer",
+                      "example": 3
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Solicitud"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/vias-administracion": {
+      "get": {
+        "summary": "Listar vías de administración",
+        "tags": [
+          "Admin - Vías de Administración"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de vías de administración"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear vía de administración",
+        "tags": [
+          "Admin - Vías de Administración"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vía de administración creada"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/vias-administracion/{id}": {
+      "put": {
+        "summary": "Actualizar vía de administración",
+        "tags": [
+          "Admin - Vías de Administración"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vía de administración actualizada"
+          },
+          "404": {
+            "description": "Vía no encontrada"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar vía de administración",
+        "tags": [
+          "Admin - Vías de Administración"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vía de administración eliminada"
+          },
+          "404": {
+            "description": "Vía no encontrada"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Admin - Lotes",
+      "description": "Gestión de lotes de medicamentos"
+    }
+  ]
+}
