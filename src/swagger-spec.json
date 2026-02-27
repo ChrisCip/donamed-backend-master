@@ -11,12 +11,12 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
-      "description": "Servidor de Desarrollo"
+      "url": "https://donamed-backend-master.vercel.app",
+      "description": "Servidor de Producción"
     },
     {
-      "url": "https://api.donamed.do",
-      "description": "Servidor de Producción"
+      "url": "http://localhost:3000",
+      "description": "Servidor de Desarrollo"
     }
   ],
   "components": {

@@ -20,18 +20,4 @@ try {
   };
 }
 
-// Ajustar el server URL dinámicamente según el entorno
-if (process.env.VERCEL_URL) {
-  (swaggerSpec as any).servers = [
-    {
-      url: `https://${process.env.VERCEL_URL}`,
-      description: 'Servidor Vercel',
-    },
-    {
-      url: 'https://api.donamed.do',
-      description: 'Servidor de Producción',
-    },
-  ];
-}
-
 export default swaggerSpec;

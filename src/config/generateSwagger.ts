@@ -20,12 +20,12 @@ const options = {
         },
         servers: [
             {
-                url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
-                description: process.env.VERCEL_URL ? 'Servidor Vercel' : 'Servidor de Desarrollo'
+                url: 'https://donamed-backend-master.vercel.app',
+                description: 'Servidor de Producción'
             },
             {
-                url: 'https://api.donamed.do',
-                description: 'Servidor de Producción'
+                url: 'http://localhost:3000',
+                description: 'Servidor de Desarrollo'
             }
         ],
         components: {
