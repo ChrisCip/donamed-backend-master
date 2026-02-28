@@ -2174,11 +2174,6 @@
                     "items": {
                       "type": "integer"
                     }
-                  },
-                  "foto_url": {
-                    "type": "string",
-                    "example": "MEDICAMENTOS/med_abc123.jpg",
-                    "description": "Ruta relativa de la imagen en Supabase Storage"
                   }
                 }
               }
@@ -2279,11 +2274,6 @@
                     "items": {
                       "type": "integer"
                     }
-                  },
-                  "foto_url": {
-                    "type": "string",
-                    "example": "MEDICAMENTOS/med_abc123.jpg",
-                    "description": "Ruta relativa de la imagen en Supabase Storage"
                   }
                 }
               }

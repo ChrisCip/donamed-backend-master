@@ -72,10 +72,6 @@ const router = Router();
  *                 type: array
  *                 items:
  *                   type: integer
- *               foto_url:
- *                 type: string
- *                 example: "MEDICAMENTOS/med_abc123.jpg"
- *                 description: Ruta relativa de la imagen en Supabase Storage
  *     responses:
  *       201:
  *         description: Medicamento creado
@@ -139,10 +135,6 @@ router.post('/medicamentos', medicamentoController.createMedicamento);
  *                 type: array
  *                 items:
  *                   type: integer
- *               foto_url:
- *                 type: string
- *                 example: "MEDICAMENTOS/med_abc123.jpg"
- *                 description: Ruta relativa de la imagen en Supabase Storage
  *     responses:
  *       200:
  *         description: Medicamento actualizado
